@@ -17,7 +17,9 @@ After every generation:
    The parent pays the spawn fee and the child's endowment from its own
    earnings; if it cannot, the treasury may invest instead
    (``reinvest_returned``), so money moves from losing strategies to winning
-   ones without the owner adding any.
+   ones without the owner adding any. With ``target_unserved`` the child is
+   aimed at the unserved work of its niche even if it is harder than the
+   parent takes: its ``max_difficulty`` is raised to cover it.
 
 Children inherit a mutated (and sometimes crossed-over) genome plus a
 discounted copy of the parent's memory and reputation. The sandbox caps the
@@ -29,7 +31,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 
-from .agent import Agent
+from .agent import GENE_BOUNDS, Agent
 from .config import EvolutionConfig
 from .economy import Economy
 from .population import Population
@@ -46,23 +48,37 @@ class GenerationEvents:
 
 
 class UnservedWork:
-    """Tasks nobody bid on in the last generation: the room a new agent could fill."""
+    """Tasks nobody bid on in the last generation: the room a new agent could fill.
 
-    def __init__(self, tasks: list[tuple[str, float]], capacity: int):
+    By default a child only counts the unserved tasks its parent would take
+    (same category, no harder than its ``max_difficulty``). With ``targeted``
+    it counts every unserved task of the parent's category, and the child is
+    built to take them (see ``EvolutionConfig.target_unserved``).
+    """
+
+    def __init__(self, tasks: list[tuple[str, float]], capacity: int, targeted: bool = False):
         self.tasks = list(tasks)  # (category, difficulty)
         self.capacity = capacity
+        self.targeted = targeted
 
     def _matching(self, agent: Agent) -> list[int]:
         g = agent.genome
-        return [i for i, (c, d) in enumerate(self.tasks) if c == g.specialty and d <= g.max_difficulty]
+        found = [i for i, (c, d) in enumerate(self.tasks) if c == g.specialty]
+        if not self.targeted:
+            return [i for i in found if self.tasks[i][1] <= g.max_difficulty]
+        return sorted(found, key=lambda i: self.tasks[i][1])  # easiest first
 
     def has_room_for(self, agent: Agent) -> bool:
         """Enough unserved work to keep a copy of ``agent`` at least half busy."""
         return len(self._matching(agent)) >= max(1, self.capacity // 2)
 
-    def claim(self, agent: Agent) -> None:
-        for i in reversed(self._matching(agent)[: self.capacity]):
+    def claim(self, agent: Agent) -> float:
+        """Reserve work for a child of ``agent``; returns the hardest difficulty claimed."""
+        claimed = self._matching(agent)[: self.capacity]
+        hardest = max((self.tasks[i][1] for i in claimed), default=0.0)
+        for i in sorted(claimed, reverse=True):
             del self.tasks[i]
+        return hardest
 
 
 class EvolutionEngine:
@@ -116,7 +132,7 @@ class EvolutionEngine:
             for agent in losers:
                 self._defund(population, agent, generation, "defunded")
                 events.defunded.append(agent.id)
-        work = None if unserved is None else UnservedWork(unserved, capacity)
+        work = None if unserved is None else UnservedWork(unserved, capacity, self.cfg.target_unserved)
         self._cull(population, generation, events, work)
         self._reproduce(population, generation, events, work)
         return events
@@ -194,9 +210,11 @@ class EvolutionEngine:
                 partner = self._tournament(others)
             self.sandbox.check_population(len(population.alive()))
             self.sandbox.check_spawn(spawned)
-            if work is not None:
-                work.claim(parent)
+            hardest = work.claim(parent) if work is not None else 0.0
             child = self._spawn_child(population, parent, partner, generation, payer)
+            if self.cfg.target_unserved and hardest > child.genome.max_difficulty:
+                lo, hi = GENE_BOUNDS["max_difficulty"]
+                child.genome.max_difficulty = min(hi, hardest)
             if payer == "treasury":
                 events.invested += self.child_price
             events.births.append((child.id, child.parents))

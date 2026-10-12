@@ -124,6 +124,7 @@ class EvolutionConfig:
     parent_reserve: float = 20.0
     payback_generations: float = 15.0
     reinvest_returned: bool = False
+    target_unserved: bool = False  # children are built to take the unserved work of their niche
     tournament_size: int = 3
     crossover_rate: float = 0.3
     mutation_rate: float = 0.3

@@ -68,3 +68,22 @@ def test_verdicts_separate_wins_losses_and_ties():
     assert _judge([comparison(-4.7, 0, 10)]) == "No: "
     assert _judge([comparison(0.004, 1, 1)]).startswith("No clear difference (one seed")
     assert _judge([comparison(1.2, 9, 10), comparison(-0.5, 3, 10)]).startswith("Not consistently")
+
+
+def test_separate_seeds_merge_into_the_same_summary(small_cfg, tmp_path):
+    from astra.results import merge_results
+
+    together = run_experiment(small_cfg)
+    small_cfg.experiment.seeds = 1
+    run_experiment(small_cfg, tmp_path / "a")
+    small_cfg.experiment.base_seed = 2
+    run_experiment(small_cfg, tmp_path / "b")
+    merged = merge_results([tmp_path / "a", tmp_path / "b"], tmp_path / "merged")
+    assert len(merged["per_run"]) == len(together["per_run"])
+    for got, want in zip(merged["per_run"], together["per_run"]):  # CSV keeps 6 decimals
+        assert got.keys() == want.keys()
+        for key, value in want.items():
+            assert got[key] == (pytest.approx(value, abs=1e-4) if isinstance(value, float) else value), key
+    assert (tmp_path / "merged" / "report.md").exists()
+    with pytest.raises(ValueError, match="more than one"):
+        merge_results([tmp_path / "a", tmp_path / "a"], tmp_path / "bad")

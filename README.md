@@ -71,6 +71,8 @@ astra run --set market.internal_competition=true --set evolution.mutation_rate=0
 Each run writes `results/<name>-<time>/` with `report.md`, `capital.svg`,
 per-generation `generations.csv`, every agent with its lineage in
 `agents.jsonl`, and `summary.json`. Same config and seeds give the same numbers.
+Runs of different seeds, made one by one or on different machines, combine
+with `astra merge --out results/all results/run-a results/run-b`.
 
 Without installing: `pip install pyyaml && python experiments/first_evolution.py`.
 

@@ -107,6 +107,8 @@ Same 10 seeds, one change at a time (`astra run --set ...`):
 | demand shock at generation 50 (market research x6) | x1.39 | x0.25 | x8.07 | x5.80 | 9/10 | 10/10 |
 | `evolution.crossover_rate=0` | x1.34 | x0.25 | x9.06 | x6.19 | 9/10 | 10/10 |
 | `evolution.mutation_rate=0.6` | x1.32 | x0.25 | x8.26 | x6.19 | 9/10 | 9/10 |
+| `evolution.target_unserved=true` | x1.36 | x0.25 | x7.99 | x6.19 | 9/10 | 10/10 |
+| `target_unserved` + `reinvest_returned` | x0.84 | x0.25 | x7.93 | x6.19 | 8/10 | 9/10 |
 
 - **Internal competition costs everyone about a fifth of the capital.** When
   agents of one population underbid each other, clients keep the margin.
@@ -117,6 +119,11 @@ Same 10 seeds, one change at a time (`astra run --set ...`):
   the stricter rule: children are paid for only from earnings.
 - Crossover is not needed for this genome; a higher mutation rate hurts a
   little.
+- **Growing into harder unserved work does not pay in this market.** With
+  `target_unserved`, children are built to take the unserved tasks of their
+  niche, which here are mostly too hard for the simulated models: the
+  population grows (8 to 15 agents from a random start) and earns less,
+  especially when the treasury also funds those children.
 
 ## Design lessons
 

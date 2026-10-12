@@ -112,3 +112,13 @@ def test_lineage_follows_first_parents():
     set_profits(population, [[9.0], [9.0]])
     child_id, parents = engine.step(population, 0, unserved=[("a", 0.5)] * 50, capacity=5).births[0]
     assert population.lineage(child_id) == [parents[0]]
+
+
+def test_targeted_children_are_built_for_harder_unserved_work():
+    population, _, engine = setup(n=2, payback_generations=10, target_unserved=True)
+    for agent in population.alive():
+        agent.genome.max_difficulty = 0.4
+    set_profits(population, [[9.0], [9.0]])
+    events = engine.step(population, 0, unserved=[("a", 0.9)] * 50, capacity=5)
+    assert events.births
+    assert all(population.get(child).genome.max_difficulty >= 0.9 for child, _ in events.births)

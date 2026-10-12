@@ -72,6 +72,7 @@ evolution:
   parent_reserve: 20.0     # money a parent must keep after paying for a child
   payback_generations: 15.0  # a parent's profit must repay a child within this many generations
   reinvest_returned: false # true: the treasury reinvests money taken back from defunded agents
+  target_unserved: false   # true: children are built to take the unserved work of their niche
   tournament_size: 3
   crossover_rate: 0.3
   mutation_rate: 0.3

@@ -13,7 +13,7 @@ from .config import Config, ConfigError, load_config
 from .experiment import build_model_pool, run_experiment, run_llm_experiment
 from .ollama_client import OllamaClient, OllamaError, discover_models
 from .owner import Workspace, WorkspaceError
-from .results import format_summary
+from .results import format_summary, merge_results
 from .sandbox import Sandbox, SandboxViolation
 from .solvers import LLMSolver
 
@@ -163,6 +163,16 @@ def cmd_evolve(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_merge(args: argparse.Namespace) -> int:
+    try:
+        summary = merge_results(args.dirs, args.out)
+    except (ValueError, FileNotFoundError) as exc:
+        raise ConfigError(str(exc)) from None
+    print(format_summary(summary))
+    print(f"\nMerged {len(args.dirs)} run(s) into {Path(args.out) / 'report.md'}")
+    return 0
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     print(Workspace.open(args.workspace).status_text())
     return 0
@@ -203,6 +213,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("ollama-check", aliases=["check"], help="check model connections and list usable models")
     config_args(p)
     p.set_defaults(func=cmd_check)
+
+    p = sub.add_parser("merge", help="combine result directories of separate runs (different seeds)")
+    p.add_argument("--out", required=True, help="directory for the combined results")
+    p.add_argument("dirs", nargs="+", help="result directories to combine")
+    p.set_defaults(func=cmd_merge)
 
     p = sub.add_parser("init", help="owner mode: create a workspace with a fresh population")
     config_args(p)

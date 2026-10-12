@@ -161,6 +161,82 @@ def _mean_traits(rows: list[dict[str, Any]]) -> dict[str, float]:
 
 
 # ---------------------------------------------------------------------------
+# Reading results back (to merge runs made separately, e.g. one seed per process or machine)
+
+
+def _parse(value: str) -> Any:
+    for cast in (int, float):
+        try:
+            return cast(value)
+        except ValueError:
+            pass
+    return value
+
+
+def load_results(directory: str | Path) -> tuple[Config, list[ArmResult], dict[str, Any]]:
+    """Read a results directory written by ``write_results``."""
+    from .config import load_config
+    from .experiment import ArmResult
+
+    directory = Path(directory)
+    cfg = load_config(directory / "config.yaml")
+    summary = json.loads((directory / "summary.json").read_text(encoding="utf-8"))
+    with open(directory / "generations.csv", newline="", encoding="utf-8") as fh:
+        rows = [{k: _parse(v) for k, v in row.items() if v != ""} for row in csv.DictReader(fh)]
+
+    def jsonl(name: str) -> list[dict[str, Any]]:
+        path = directory / name
+        if not path.exists():
+            return []
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
+
+    agents, attempts = jsonl("agents.jsonl"), jsonl("attempts.jsonl")
+    capital = cfg.experiment.population_size * cfg.economy.initial_budget
+    results = []
+    order = {arm: i for i, arm in enumerate(cfg.experiment.arms)}
+    for arm, seed in sorted({(r["arm"], r["seed"]) for r in rows}, key=lambda k: (k[1], order.get(k[0], 99))):
+        def pick(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+            return [x for x in items if x["arm"] == arm and x["seed"] == seed]
+
+        result = ArmResult(arm, seed, capital, pick(rows), pick(agents), pick(attempts))
+        result.rows.sort(key=lambda r: r["generation"])
+        results.append(result)
+    return cfg, results, summary
+
+
+def merge_results(directories: list[str | Path], out: str | Path) -> dict[str, Any]:
+    """Combine runs that differ only in their seeds into one summary and report."""
+    loaded = [load_results(d) for d in directories]
+    cfg = loaded[0][0]
+    reference = _comparable(cfg)
+    for (other, _, _), directory in zip(loaded[1:], directories[1:]):
+        if _comparable(other) != reference:
+            raise ValueError(f"{directory}: configuration differs from {directories[0]} (beyond seeds)")
+    results = [r for _, rs, _ in loaded for r in rs]
+    keys = [(r.arm, r.seed) for r in results]
+    if len(keys) != len(set(keys)):
+        raise ValueError("the same arm and seed appear in more than one directory")
+    seeds = sorted({r.seed for r in results})
+    cfg.experiment.seeds, cfg.experiment.base_seed = len(seeds), seeds[0]
+    summary = summarize(results, cfg)
+    spent = [s["api"] for _, _, s in loaded if "api" in s]
+    if spent:
+        summary["api"] = {
+            "calls": sum(a["calls"] for a in spent),
+            "spent_usd": sum(a["spent_usd"] for a in spent),
+        }
+    write_results(Path(out), cfg, results, summary)
+    return summary
+
+
+def _comparable(cfg: Config) -> dict[str, Any]:
+    data = cfg.to_dict()
+    for key in ("seeds", "base_seed", "results_dir"):
+        data["experiment"].pop(key)
+    return data
+
+
+# ---------------------------------------------------------------------------
 # Output files
 
 
