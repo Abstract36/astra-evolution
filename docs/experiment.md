@@ -174,6 +174,55 @@ with 5-9:
 It is one seed and ten generations, so read it as a working demonstration on
 real models, not as statistical evidence.
 
+## Local models vs. a paid API (DeepSeek)
+
+`astra llm-run --config config/deepseek.yaml` lets agents choose between the
+local models and DeepSeek's API (`deepseek-flash`, `deepseek-v4-pro`). Local
+calls are billed by measured GPU seconds at an estimated electricity and
+hardware cost, API calls by the tokens the API reports, at peak prices
+(1 credit = $0.001). An agent's effort of 1 or more switches the API model's
+thinking mode on. 12 agents, 12 generations, 30 tasks per generation, one seed
+([report](results/local_vs_deepseek/report.md), every answer in
+[attempts.jsonl](results/local_vs_deepseek/attempts.jsonl)).
+
+| Arm | Capital multiple | Revenue / full cost | Success rate | Agents at end |
+|---|---:|---:|---:|---:|
+| Evolving (random start) | x1.14 | 1.64 | 71% | 6 |
+| Static (random) | x1.14 | 1.57 | 67% | 12 |
+
+Real money spent: 188 API calls, $0.033 at peak prices (the account balance
+moved from $19.36 to $19.34, since the run fell in off-peak hours).
+
+What the models did:
+
+| Model | Tasks | Solved | Cost per attempt |
+|---|---|---:|---:|
+| `deepseek-flash`, thinking on | all four categories | 100% (188 of 188) | $0.0001-0.0004 |
+| `Dolphin3.0-Llama3.1-8B`, local | e-mail extraction | 84-89% | $0.00008-0.00016 |
+| `Dolphin3.0-Llama3.1-8B`, local | arithmetic, counting, sorting | 8-58% | $0.00001-0.00019 |
+
+What happened, honestly:
+
+- **No clear difference between the arms** (both x1.14). Evolution raised the
+  success rate from 60% (generations 0-5) to 86% (6-11) and profit per agent
+  to +0.47 against +0.22, but it got there by defunding half of the agents, and
+  the smaller population served fewer tasks.
+- **Learning from experience did most of the work.** Agents in the unchanged
+  population also stopped bidding where they kept failing; their success rate
+  rose from 63% to 72% without any selection.
+- **A paid API model can be the cheap option.** At about $0.0002 per correct
+  answer, `deepseek-flash` was both the most accurate and, per solved task,
+  competitive with a free-to-download local model that is mostly wrong outside
+  one niche.
+- In this seed no agent started with `qwen3.5:4b`, and the one `deepseek-v4-pro`
+  agent never won a task, so the run says nothing about those two.
+
+The next step for real models is more seeds and a population that can refill
+after defunding (for example `evolution.reinvest_returned: true`), so that
+selection does not cost throughput.
+
+## Calibration of reasoning models
+
 A calibration run before it found that reasoning models (`deepseek-r1` 7B, 14B
 and 70B) kept reasoning even with thinking disabled, used up every token and
 solved none of the eight probe tasks, while costing 10-80 seconds per answer.

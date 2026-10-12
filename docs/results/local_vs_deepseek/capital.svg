@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 400" width="820" height="400" role="img" aria-label="Capital multiple by generation (mean over seeds)">
+<style>
+svg{--surface:#fcfcfb;--text:#0b0b0b;--muted:#52514e;--grid:#e8e7e3;--axis:#b5b3ad;--s-evolving:#2a78d6;--s-static_random:#eb6834;--s-static_tuned:#1baf7a;--s-evolving_tuned:#eda100;}
+@media (prefers-color-scheme: dark){svg{--surface:#1a1a19;--text:#f0efec;--muted:#c3c2b7;--grid:#2e2e2c;--axis:#5c5b57;--s-evolving:#3987e5;--s-static_random:#d95926;--s-static_tuned:#199e70;--s-evolving_tuned:#c98500;}}
+text{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;fill:var(--muted)}
+.title{font-size:15px;font-weight:600;fill:var(--text)}
+.label{fill:var(--text)}
+</style>
+<rect width="820" height="400" fill="var(--surface)"/>
+<text class="title" x="56" y="24">Capital multiple by generation (mean over seeds)</text>
+<line x1="56" y1="44" x2="72" y2="44" stroke="var(--s-evolving)" stroke-width="2" stroke-linecap="round"/>
+<text x="78" y="48">Evolving (random start)</text>
+<line x1="237.79999999999998" y1="44" x2="253.79999999999998" y2="44" stroke="var(--s-static_random)" stroke-width="2" stroke-linecap="round"/>
+<text x="259.79999999999995" y="48">Static (random)</text>
+<line x1="56" y1="356.0" x2="610" y2="356.0" stroke="var(--grid)" stroke-width="1"/>
+<text x="48" y="360.0" text-anchor="end">x0.95</text>
+<line x1="56" y1="284.5" x2="610" y2="284.5" stroke="var(--grid)" stroke-width="1"/>
+<text x="48" y="288.5" text-anchor="end">x1</text>
+<line x1="56" y1="213.0" x2="610" y2="213.0" stroke="var(--grid)" stroke-width="1"/>
+<text x="48" y="217.0" text-anchor="end">x1.05</text>
+<line x1="56" y1="141.5" x2="610" y2="141.5" stroke="var(--grid)" stroke-width="1"/>
+<text x="48" y="145.5" text-anchor="end">x1.1</text>
+<line x1="56" y1="70.0" x2="610" y2="70.0" stroke="var(--grid)" stroke-width="1"/>
+<text x="48" y="74.0" text-anchor="end">x1.15</text>
+<line x1="56" y1="284.5" x2="610" y2="284.5" stroke="var(--axis)" stroke-width="1"/>
+<text x="56.0" y="374" text-anchor="middle">0</text>
+<text x="156.7" y="374" text-anchor="middle">2</text>
+<text x="257.5" y="374" text-anchor="middle">4</text>
+<text x="358.2" y="374" text-anchor="middle">6</text>
+<text x="458.9" y="374" text-anchor="middle">8</text>
+<text x="559.6" y="374" text-anchor="middle">10</text>
+<text x="333.0" y="394" text-anchor="middle">generation</text>
+<polyline points="56.0,286.6 106.4,279.0 156.7,265.6 207.1,237.1 257.5,216.8 307.8,195.3 358.2,170.0 408.5,156.2 458.9,135.5 509.3,118.4 559.6,93.7 610.0,79.0" fill="none" stroke="var(--s-evolving)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="56.0,291.8 106.4,281.8 156.7,264.9 207.1,238.2 257.5,219.1 307.8,196.3 358.2,169.0 408.5,147.4 458.9,132.2 509.3,120.3 559.6,106.3 610.0,85.3" fill="none" stroke="var(--s-static_random)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="610.0" cy="79.0" r="4" fill="var(--s-evolving)" stroke="var(--surface)" stroke-width="2"/>
+<line x1="620.0" y1="79.0" x2="632.0" y2="79.0" stroke="var(--s-evolving)" stroke-width="2" stroke-linecap="round"/>
+<text class="label" x="638.0" y="83.0">x1.14 Evolving (random start)</text>
+<circle cx="610.0" cy="85.3" r="4" fill="var(--s-static_random)" stroke="var(--surface)" stroke-width="2"/>
+<line x1="620.0" y1="95.0" x2="632.0" y2="95.0" stroke="var(--s-static_random)" stroke-width="2" stroke-linecap="round"/>
+<text class="label" x="638.0" y="99.0">x1.14 Static (random)</text>
+</svg>

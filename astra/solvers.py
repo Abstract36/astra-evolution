@@ -1,8 +1,8 @@
 """Solvers turn (agent, task) into an outcome with a cost.
 
 ``SimulatedSolver`` uses a transparent model of quality and cost so that large
-experiments run in seconds. ``LLMSolver`` runs the agent's real model through
-Ollama and measures the compute time it actually used.
+experiments run in seconds. ``LLMSolver`` runs the agent's real model, locally
+through Ollama or through a paid API, and bills what each call actually cost.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from .agent import Agent
-from .config import EconomyConfig, ModelSpec, OllamaConfig
+from .config import APIModelSpec, EconomyConfig, ModelSpec, OllamaConfig
 from .market import Task
 from .ollama_client import GenerateResult
 from .sandbox import Sandbox
@@ -76,7 +76,7 @@ class SimulatedSolver:
 
 class TextModel(Protocol):
     def generate(
-        self, model: str, prompt: str, *, temperature: float, num_predict: int, think: bool | None
+        self, model: str, prompt: str, *, temperature: float, num_predict: int, think: bool | None, effort: float
     ) -> GenerateResult: ...
 
 
@@ -103,24 +103,52 @@ OWNER_REVIEW = (
 )
 
 
-class LLMSolver:
-    """Runs the agent's own model; cost = measured compute seconds * cost_per_second."""
+def local_call_cost(size_gb: float, cost_per_second: float) -> float:
+    """Rough cost of one local call before any is measured: bigger models are slower."""
+    return (1.0 + 0.6 * size_gb) * cost_per_second
 
-    def __init__(self, client: TextModel, cfg: OllamaConfig, sandbox: Sandbox, model_sizes: dict[str, float]):
+
+def api_call_cost(model: APIModelSpec, credits_per_usd: float, tokens_in: int = 300, tokens_out: int = 300) -> float:
+    """Rough cost of one API call before any is measured."""
+    usd = (tokens_in * model.input_usd_per_mtok + tokens_out * model.output_usd_per_mtok) / 1e6
+    return usd * credits_per_usd
+
+
+class LLMSolver:
+    """Runs the agent's own model and bills what the call actually cost.
+
+    Paid API calls are billed from their token usage (``cost_usd`` x
+    ``credits_per_usd``); local calls by measured compute time x
+    ``cost_per_second``. ``model_costs`` holds a first guess per call, used
+    until an agent has its own experience.
+    """
+
+    def __init__(
+        self,
+        client: TextModel,
+        cfg: OllamaConfig,
+        sandbox: Sandbox,
+        model_costs: dict[str, float],
+        credits_per_usd: float = 1000.0,
+    ):
         self.client = client
         self.cfg = cfg
         self.sandbox = sandbox
-        self.model_sizes = model_sizes
+        self.model_costs = model_costs
+        self.credits_per_usd = credits_per_usd
 
     def estimate_cost(self, agent: Agent, task: Task) -> float:
         known = agent.memory.mean_cost(task.category)
         if known is not None:
             return known
         g = agent.genome
-        seconds = (1.0 + 0.6 * self.model_sizes.get(g.model, 5.0)) * g.effort
-        if g.review:
-            seconds *= 2
-        return seconds * self.cfg.cost_per_second
+        cost = self.model_costs.get(g.model, local_call_cost(5.0, self.cfg.cost_per_second)) * g.effort
+        return cost * 2 if g.review else cost
+
+    def cost_of(self, result: GenerateResult) -> float:
+        if result.cost_usd is not None:
+            return result.cost_usd * self.credits_per_usd
+        return result.seconds * self.cfg.cost_per_second
 
     def _generate(self, agent: Agent, prompt: str, tokens: int) -> GenerateResult:
         return self.client.generate(
@@ -129,6 +157,7 @@ class LLMSolver:
             temperature=self.cfg.temperature,
             num_predict=self.sandbox.clamp_tokens(int(tokens * agent.genome.effort)),
             think=self.cfg.think,
+            effort=agent.genome.effort,
         )
 
     def attempt(self, agent: Agent, task: Task, rng: random.Random) -> Outcome:
@@ -136,14 +165,14 @@ class LLMSolver:
         style = VERIFIABLE_STEPWISE if agent.genome.effort >= 1.0 else VERIFIABLE_DIRECT
         question = task.payload["prompt"]
         first = self._generate(agent, f"{style}\n\nTask: {question}", self.cfg.base_tokens)
-        text, seconds = first.text, first.seconds
+        text, seconds, cost = first.text, first.seconds, self.cost_of(first)
         if agent.genome.review:
             second = self._generate(
                 agent, VERIFIABLE_REVIEW.format(task=question, draft=text), self.cfg.base_tokens
             )
-            text, seconds = second.text, seconds + second.seconds
+            text, seconds, cost = second.text, seconds + second.seconds, cost + self.cost_of(second)
         success = check_answer(task.payload["kind"], task.payload["answer"], text)
-        return Outcome(success, seconds * self.cfg.cost_per_second, text, seconds)
+        return Outcome(success, cost, text, seconds)
 
     def produce(self, agent: Agent, task: Task) -> Outcome:
         """Draft a free-form deliverable for an owner task; the owner judges it."""
@@ -154,8 +183,8 @@ class LLMSolver:
         }
         plan = " Plan the structure briefly before writing." if agent.genome.effort >= 1.0 else ""
         first = self._generate(agent, OWNER_TASK.format(plan=plan, **fields), self.cfg.owner_tokens)
-        text, seconds = first.text, first.seconds
+        text, seconds, cost = first.text, first.seconds, self.cost_of(first)
         if agent.genome.review:
             second = self._generate(agent, OWNER_REVIEW.format(draft=text, **fields), self.cfg.owner_tokens)
-            text, seconds = second.text, seconds + second.seconds
-        return Outcome(success=True, cost=seconds * self.cfg.cost_per_second, output=text, seconds=seconds)
+            text, seconds, cost = second.text, seconds + second.seconds, cost + self.cost_of(second)
+        return Outcome(success=True, cost=cost, output=text, seconds=seconds)

@@ -102,7 +102,7 @@ def test_discover_models_filters_and_sorts():
 
 def make_solver(reply, review=False, effort=1.0):
     client = FakeLLM(reply, seconds=2.0)
-    solver = LLMSolver(client, OllamaConfig(cost_per_second=0.5), Sandbox(SandboxConfig()), {"tiny:1b": 1.0})
+    solver = LLMSolver(client, OllamaConfig(cost_per_second=0.5), Sandbox(SandboxConfig()), {"tiny:1b": 0.8})
     agent = Agent(1, Genome({"arithmetic": 1.0}, "tiny:1b", effort=effort, review=review))
     return client, solver, agent
 

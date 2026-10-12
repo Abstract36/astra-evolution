@@ -6,7 +6,7 @@ Every arm of a seed sees exactly the same tasks. Values are mean ± standard dev
 ## Verdict
 
 - **Do evolving agents earn more than their full cost (compute + sales + upkeep + spawning)?** Yes: revenue / full cost = Evolving (random start) 1.61.
-- **Does evolution improve on the same strategies kept unchanged?** Yes: Evolving (random start) beats Static (random) in 1/1 seeds (capital multiple +0.24).
+- **Does evolution improve on the same strategies kept unchanged?** Yes (one seed: a demonstration, not evidence): Evolving (random start) vs Static (random): wins in 1/1 seeds, capital multiple +0.24.
 - **Does the evolving population grow its capital?** Yes: Evolving (random start) x1.26 after 10 generations.
 
 ## Results by arm
@@ -64,7 +64,7 @@ Market demand in the last generation, to compare with `focus:*` above: arithmeti
 
 ## How to read this
 
-- **Capital multiple**: (money held by living agents + money returned to the owner - debts of bankrupt agents) / initial funding. Above 1 means the population earned more than it spent.
+- **Capital multiple**: (all agent balances, debts of bankrupt agents included, + money taken back from defunded agents) / initial funding. Above 1 means the population earned more than it spent.
 - **Operating profit**: revenue minus compute, sales and upkeep costs, summed over all agents and generations.
 - **Revenue / full cost**: revenue divided by compute + sales + upkeep + spawn fees.
 - **Static** arms never reproduce or mutate; agents only leave them by going bankrupt.

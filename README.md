@@ -45,6 +45,11 @@ funding. Selection runs on measured results, not on anyone's opinion.
 - **Not solved yet:** from random strategies, 100 generations do not reach what
   an offline grid search finds with a perfect simulator (0/10 seeds). That is
   the next research question.
+- **With real models** (local Ollama models vs. DeepSeek's API, real token
+  bills, one seed): `deepseek-flash` solved 188 of 188 tasks at about $0.0002
+  each, and evolution matched but did not beat an unchanged population that
+  simply learned from experience. The whole run cost $0.03 of real money.
+  [Details](docs/experiment.md#local-models-vs-a-paid-api-deepseek).
 - **Design lessons** that matter for any network of economic agents, for
   example that letting agents of one network underbid each other costs everyone
   about a fifth of the capital, are in [docs/experiment.md](docs/experiment.md#design-lessons).
@@ -81,6 +86,21 @@ astra ollama-run                   # agents pick models and pay for measured GPU
 
 Tasks are checked automatically (arithmetic, sorting, counting, e-mail
 extraction), and every model answer is saved to `attempts.jsonl`.
+
+### Local models vs. a paid API
+
+Let agents choose between your local models and DeepSeek's API, each billed
+at what it really costs (GPU seconds locally, tokens on the API), with a hard
+cap on real spending:
+
+```bash
+export DEEPSEEK_API_KEY=sk-...                 # read from the environment only
+astra check   --config config/deepseek.yaml    # each model answers 2 + 2 and shows its cost
+astra llm-run --config config/deepseek.yaml    # spending cap: sandbox.max_api_spend_usd ($1)
+```
+
+Any OpenAI-compatible API works: set `api.base_url`, the models and their
+prices, and add the host to `sandbox.allowed_hosts`.
 
 ### Owner mode: real tasks, real payments
 

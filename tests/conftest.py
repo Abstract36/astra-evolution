@@ -17,7 +17,7 @@ class FakeLLM:
         self.seconds = seconds
         self.calls: list[tuple[str, str, int]] = []
 
-    def generate(self, model, prompt, *, temperature=0.2, num_predict=256, think=False):
+    def generate(self, model, prompt, *, temperature=0.2, num_predict=256, think=False, effort=1.0):
         self.calls.append((model, prompt, num_predict))
         return GenerateResult(self.reply(model, prompt), self.seconds, 10, 20, model)
 

@@ -12,14 +12,15 @@ from pathlib import Path
 from typing import Any, Callable, Protocol
 
 from .agent import Agent, Bid, Genome
-from .config import ARMS, BaselineConfig, Config, ModelSpec
+from .api_client import APIClient, ModelRouter
+from .config import ARMS, BaselineConfig, Config, ConfigError, ModelSpec
 from .economy import Economy
 from .evolution import EvolutionEngine
 from .market import RoundStats, SimulatedMarket, Task, WinModel, trade_round
 from .ollama_client import OllamaClient, discover_models
 from .population import Population, genome_stats
 from .sandbox import Sandbox
-from .solvers import LLMSolver, Outcome, SimulatedSolver, Solver
+from .solvers import LLMSolver, Outcome, SimulatedSolver, Solver, api_call_cost, local_call_cost
 from .verifiable import VerifiableMarket
 
 Progress = Callable[[str], None]
@@ -265,28 +266,64 @@ def run_experiment(cfg: Config, out_dir: str | Path | None = None, progress: Pro
     return summary
 
 
+@dataclass
+class ModelPool:
+    """Every model the agents may choose from, cheapest first, behind one client."""
+
+    client: ModelRouter
+    names: list[str]
+    costs: dict[str, float]  # first guess of credits per call, before experience
+    api: APIClient | None
+    descriptions: list[str]
+
+
+def build_model_pool(
+    cfg: Config, sandbox: Sandbox, local: Any | None = None, api: APIClient | None = None
+) -> ModelPool:
+    """Local Ollama models (if enabled) followed by paid API models (if enabled)."""
+    infos = []
+    if cfg.ollama.enabled:
+        if local is None:
+            local = OllamaClient(cfg.ollama.host, sandbox, cfg.sandbox.request_timeout)
+        infos = discover_models(local, cfg.ollama.models, cfg.ollama.max_model_size_gb)
+    if cfg.api.enabled and api is None:
+        api = APIClient(cfg.api, sandbox)
+    names = [m.name for m in infos]
+    costs = {m.name: local_call_cost(m.size_gb, cfg.ollama.cost_per_second) for m in infos}
+    descriptions = [f"{m.name} (local, {m.size_gb:.1f} GB)" for m in infos]
+    if api is not None:
+        for m in cfg.api.models:
+            names.append(m.name)
+            costs[m.name] = api_call_cost(m, cfg.api.credits_per_usd)
+            descriptions.append(f"{m.name} (API, ${m.output_usd_per_mtok:g} per 1M output tokens)")
+    if not names:
+        raise ConfigError("no models to use: enable ollama and/or api")
+    return ModelPool(ModelRouter(local if infos else None, api), names, costs, api, descriptions)
+
+
 def run_llm_experiment(
     cfg: Config,
     out_dir: str | Path | None = None,
     progress: Progress | None = None,
     client: Any | None = None,
+    api: APIClient | None = None,
 ) -> dict:
-    """The same experiment with real local models on auto-checkable tasks."""
+    """The same experiment with real models (local and/or paid API) on auto-checkable tasks."""
     from .results import summarize, write_results
 
     sandbox = Sandbox(cfg.sandbox)
-    if client is None:
-        client = OllamaClient(cfg.ollama.host, sandbox, cfg.sandbox.request_timeout)
-    infos = discover_models(client, cfg.ollama.models, cfg.ollama.max_model_size_gb)
-    cfg.models = [ModelSpec(m.name) for m in infos]
-    models = [m.name for m in infos]
+    pool = build_model_pool(cfg, sandbox, client, api)
+    cfg.models = [ModelSpec(name) for name in pool.names]
+    models = pool.names
     if cfg.baseline.model not in models:
         cfg.baseline.model = models[0]
     cfg.validate()
     if progress is not None:
-        progress("models: " + ", ".join(f"{m.name} ({m.size_gb:.1f} GB)" for m in infos))
+        progress("models: " + "; ".join(pool.descriptions))
+        if pool.api is not None:
+            progress(f"paid API spending cap: ${cfg.sandbox.max_api_spend_usd:g}")
 
-    solver = LLMSolver(client, cfg.ollama, sandbox, {m.name: m.size_gb for m in infos})
+    solver = LLMSolver(pool.client, cfg.ollama, sandbox, pool.costs, cfg.api.credits_per_usd)
     results = []
     for offset in range(cfg.experiment.seeds):
         seed = cfg.experiment.base_seed + offset
@@ -302,7 +339,11 @@ def run_llm_experiment(
                     log_attempts=True, progress=progress,
                 )
             )
+            if progress is not None and pool.api is not None:
+                progress(f"  API so far: {pool.api.calls} calls, ${pool.api.spent_usd:.4f}")
     summary = summarize(results, cfg)
+    if pool.api is not None:
+        summary["api"] = {"calls": pool.api.calls, "spent_usd": pool.api.spent_usd}
     if out_dir is not None:
         write_results(Path(out_dir), cfg, results, summary)
     return summary

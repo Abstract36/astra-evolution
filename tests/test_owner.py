@@ -22,7 +22,7 @@ def workspace(tmp_path):
 
 
 def solver_for(ws, reply):
-    return LLMSolver(FakeLLM(reply), ws.cfg.ollama, Sandbox(ws.cfg.sandbox), {"tiny:1b": 1.0})
+    return LLMSolver(FakeLLM(reply), ws.cfg.ollama, Sandbox(ws.cfg.sandbox), {"tiny:1b": 0.001})
 
 
 def test_full_owner_cycle(workspace):

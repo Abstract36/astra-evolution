@@ -8,8 +8,9 @@ from datetime import datetime
 from pathlib import Path
 
 from . import __version__
+from .api_client import APIClient, APIError
 from .config import Config, ConfigError, load_config
-from .experiment import run_experiment, run_llm_experiment
+from .experiment import build_model_pool, run_experiment, run_llm_experiment
 from .ollama_client import OllamaClient, OllamaError, discover_models
 from .owner import Workspace, WorkspaceError
 from .results import format_summary
@@ -53,8 +54,8 @@ def cmd_run(args: argparse.Namespace) -> int:
 def cmd_ollama_run(args: argparse.Namespace) -> int:
     cfg = _load(args, default="config/ollama.yaml")
     out = _out_dir(args, cfg)
-    print(f"Running '{cfg.experiment.name}' with local models at {cfg.ollama.host}")
-    summary = run_llm_experiment(cfg, out, progress=print)
+    print(f"Running '{cfg.experiment.name}' with real models", flush=True)
+    summary = run_llm_experiment(cfg, out, progress=lambda line: print(line, flush=True))
     print()
     print(format_summary(summary))
     print(f"\nFull report: {out / 'report.md'}  (every model answer: {out / 'attempts.jsonl'})")
@@ -65,24 +66,31 @@ def _client(cfg: Config) -> OllamaClient:
     return OllamaClient(cfg.ollama.host, Sandbox(cfg.sandbox), cfg.sandbox.request_timeout)
 
 
-def cmd_ollama_check(args: argparse.Namespace) -> int:
+def cmd_check(args: argparse.Namespace) -> int:
     cfg = _load(args, default="config/ollama.yaml")
-    client = _client(cfg)
-    print(f"Ollama {client.version()} at {cfg.ollama.host}")
-    usable = {m.name for m in discover_models(client, cfg.ollama.models, cfg.ollama.max_model_size_gb)}
-    for m in client.list_models():
-        mark = "use " if m.name in usable else "skip"
-        print(f"  [{mark}] {m.name:<50} {m.size_gb:6.1f} GB  {m.parameter_size}")
-    smallest = sorted(usable, key=lambda n: next(m.size_gb for m in client.list_models() if m.name == n))[0]
-    result = client.generate(smallest, "What is 2 + 2? Reply in the form 'ANSWER: <number>'.", num_predict=32, think=cfg.ollama.think)
-    print(f"Test generation with {smallest}: {result.text!r} in {result.seconds:.2f} s")
+    question = "What is 2 + 2? Reply in the form 'ANSWER: <number>'."
+    if cfg.ollama.enabled:
+        client = _client(cfg)
+        print(f"Ollama {client.version()} at {cfg.ollama.host}")
+        usable = discover_models(client, cfg.ollama.models, cfg.ollama.max_model_size_gb)
+        names = {m.name for m in usable}
+        for m in client.list_models():
+            mark = "use " if m.name in names else "skip"
+            print(f"  [{mark}] {m.name:<50} {m.size_gb:6.1f} GB  {m.parameter_size}")
+        result = client.generate(usable[0].name, question, num_predict=32, think=cfg.ollama.think)
+        print(f"Test generation with {usable[0].name}: {result.text!r} in {result.seconds:.2f} s")
+    if cfg.api.enabled:
+        api = APIClient(cfg.api, Sandbox(cfg.sandbox))
+        print(f"API {cfg.api.base_url}, spending cap ${cfg.sandbox.max_api_spend_usd:g}")
+        for m in cfg.api.models:
+            result = api.generate(m.name, question, num_predict=16, effort=0.5)
+            print(f"  {m.name}: {result.text!r} in {result.seconds:.2f} s for ${result.cost_usd:.6f}")
     return 0
 
 
 def cmd_init(args: argparse.Namespace) -> int:
     cfg = _load(args, default="config/owner.yaml")
-    client = _client(cfg)
-    models = [m.name for m in discover_models(client, cfg.ollama.models, cfg.ollama.max_model_size_gb)]
+    models = build_model_pool(cfg, Sandbox(cfg.sandbox)).names
     categories = [c.name for c in cfg.market.categories]
     ws = Workspace.create(args.workspace, cfg, models, categories, seed=args.seed)
     print(f"Created workspace {ws.root} with {len(ws.population.alive())} agents using {models}")
@@ -99,9 +107,8 @@ def cmd_add_tasks(args: argparse.Namespace) -> int:
 
 def cmd_work(args: argparse.Namespace) -> int:
     ws = Workspace.open(args.workspace)
-    client = _client(ws.cfg)
-    sizes = {m.name: m.size_gb for m in client.list_models()}
-    solver = LLMSolver(client, ws.cfg.ollama, ws.sandbox, sizes)
+    pool = build_model_pool(ws.cfg, ws.sandbox)
+    solver = LLMSolver(pool.client, ws.cfg.ollama, ws.sandbox, pool.costs, ws.cfg.api.credits_per_usd)
     done = ws.work(solver, limit=args.limit, progress=print)
     for t in done:
         check = "" if t.auto_check is None else f", automatic check {'passed' if t.auto_check else 'FAILED'}"
@@ -186,13 +193,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--quiet", action="store_true", help="only print the final summary")
     p.set_defaults(func=cmd_run)
 
-    p = sub.add_parser("ollama-run", help="experiment with real local models on auto-checked tasks")
+    p = sub.add_parser(
+        "ollama-run", aliases=["llm-run"],
+        help="experiment with real models (local Ollama and/or a paid API) on auto-checked tasks",
+    )
     experiment_args(p)
     p.set_defaults(func=cmd_ollama_run)
 
-    p = sub.add_parser("ollama-check", help="check the Ollama connection and list usable models")
+    p = sub.add_parser("ollama-check", aliases=["check"], help="check model connections and list usable models")
     config_args(p)
-    p.set_defaults(func=cmd_ollama_check)
+    p.set_defaults(func=cmd_check)
 
     p = sub.add_parser("init", help="owner mode: create a workspace with a fresh population")
     config_args(p)
@@ -235,7 +245,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, SandboxViolation, OllamaError, WorkspaceError) as exc:
+    except (ConfigError, SandboxViolation, OllamaError, APIError, WorkspaceError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     except KeyboardInterrupt:

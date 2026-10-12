@@ -11,7 +11,7 @@ def test_default_yaml_mirrors_builtin_defaults():
     assert load_config(ROOT / "config" / "default.yaml").to_dict() == Config().to_dict()
 
 
-@pytest.mark.parametrize("name", ["ollama.yaml", "owner.yaml"])
+@pytest.mark.parametrize("name", ["ollama.yaml", "owner.yaml", "deepseek.yaml"])
 def test_shipped_configs_load(name):
     load_config(ROOT / "config" / name)
 
@@ -43,6 +43,7 @@ def test_nested_lists_build_dataclasses():
         ("baseline.model=huge", "baseline.model"),
         ("market.shocks=[{generation: 1, category: nope, multiplier: 2}]", "unknown category"),
         ("broken", "section.key=value"),
+        ("api.enabled=true", "max_api_spend_usd"),
     ],
 )
 def test_invalid_values_are_rejected(override, message):

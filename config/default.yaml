@@ -97,9 +97,11 @@ sandbox:
   allowed_hosts: [127.0.0.1, localhost, "::1"]
   request_timeout: 300.0
   max_tokens_per_call: 4096
+  max_api_spend_usd: 0.0   # real money for paid API calls; 0 allows none
 
-# Used only by `astra ollama-run` and owner mode.
+# Used only by `astra llm-run` and owner mode.
 ollama:
+  enabled: true
   host: http://127.0.0.1:11434
   models: []               # empty = every installed model up to max_model_size_gb
   max_model_size_gb: 10.0
@@ -113,3 +115,15 @@ ollama:
     - {name: sorting, base_price: 4.0, demand: 0.25}
     - {name: counting, base_price: 4.0, demand: 0.25}
     - {name: extraction, base_price: 4.0, demand: 0.25}
+
+# A paid OpenAI-compatible API (DeepSeek by default), next to or instead of local
+# models. Off by default; see config/deepseek.yaml. The key is read from the
+# environment variable named in api_key_env, never from a file.
+api:
+  enabled: false
+  base_url: https://api.deepseek.com
+  api_key_env: DEEPSEEK_API_KEY
+  credits_per_usd: 1000.0
+  thinking_tokens: 1024    # extra output budget when an agent's effort (>= 1) turns thinking on
+  models:
+    - {name: deepseek-flash, input_usd_per_mtok: 0.3, cached_input_usd_per_mtok: 0.006, output_usd_per_mtok: 1.2}

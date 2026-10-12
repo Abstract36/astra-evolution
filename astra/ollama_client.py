@@ -30,6 +30,7 @@ class GenerateResult:
     prompt_tokens: int
     completion_tokens: int
     model: str
+    cost_usd: float | None = None  # set by paid APIs; local calls are billed by time
 
 
 @dataclass
@@ -88,7 +89,9 @@ class OllamaClient:
         temperature: float = 0.2,
         num_predict: int = 256,
         think: bool | None = False,
+        effort: float = 1.0,
     ) -> GenerateResult:
+        """Local generation; ``effort`` is accepted for a uniform interface and unused."""
         payload: dict[str, Any] = {
             "model": model,
             "prompt": prompt,

@@ -6,7 +6,7 @@ Every arm of a seed sees exactly the same tasks. Values are mean ± standard dev
 ## Verdict
 
 - **Do evolving agents earn more than their full cost (compute + sales + upkeep + spawning)?** Yes: revenue / full cost = Evolving (random start) 1.22, Evolving (hand-tuned start) 1.85.
-- **Does evolution improve on the same strategies kept unchanged?** Yes: Evolving (random start) beats Static (random) in 9/10 seeds (capital multiple +1.20); Evolving (hand-tuned start) beats Static (hand-tuned) in 10/10 seeds (capital multiple +2.27).
+- **Does evolution improve on the same strategies kept unchanged?** Yes: Evolving (random start) vs Static (random): wins in 9/10 seeds, capital multiple +1.20; Evolving (hand-tuned start) vs Static (hand-tuned): wins in 10/10 seeds, capital multiple +2.27.
 - **Does evolution from a random start match a strategy tuned offline by grid search?** No: wins in 0/10 seeds (capital multiple -4.74).
 - **Does the evolving population grow its capital?** Yes: Evolving (random start) x1.45, Evolving (hand-tuned start) x8.46 after 100 generations.
 

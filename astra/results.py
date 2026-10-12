@@ -212,6 +212,25 @@ def _fmt_stats(stats: dict[str, float], fmt: Callable[[float], str], n_seeds: in
     return f"{fmt(stats['mean'])} ± {spread}"
 
 
+TIE = 0.02  # capital multiple differences smaller than this count as no difference
+
+
+def _judge(comparisons: list[dict[str, Any]]) -> str:
+    """'Yes', 'No', 'No clear difference' or 'Not consistently', plus a caveat for one seed."""
+    diffs = [c["capital_multiple_diff"]["mean"] for c in comparisons]
+    if all(abs(d) < TIE for d in diffs):
+        verdict = "No clear difference"
+    elif all(d >= TIE and c["wins"] > c["seeds"] / 2 for d, c in zip(diffs, comparisons)):
+        verdict = "Yes"
+    elif all(d <= -TIE and c["wins"] < c["seeds"] / 2 for d, c in zip(diffs, comparisons)):
+        verdict = "No"
+    else:
+        verdict = "Not consistently"
+    if max(c["seeds"] for c in comparisons) == 1:
+        verdict += " (one seed: a demonstration, not evidence)"
+    return verdict + ": "
+
+
 def verdicts(summary: dict[str, Any]) -> list[tuple[str, str]]:
     """The questions the first prototype has to answer, from whichever arms ran."""
     arms = summary["arms"]
@@ -233,25 +252,18 @@ def verdicts(summary: dict[str, Any]) -> list[tuple[str, str]]:
     same_start = [comps[k] for k in (("evolving", "static_random"), ("evolving_tuned", "static_tuned")) if k in comps]
     if same_start:
         parts = [
-            f"{label(c['arm'])} beats {label(c['baseline'])} in {c['wins']}/{c['seeds']} seeds "
-            f"(capital multiple {c['capital_multiple_diff']['mean']:+.2f})"
+            f"{label(c['arm'])} vs {label(c['baseline'])}: wins in {c['wins']}/{c['seeds']} seeds, "
+            f"capital multiple {c['capital_multiple_diff']['mean']:+.2f}"
             for c in same_start
         ]
-        ok = all(c["wins"] > c["seeds"] / 2 for c in same_start)
-        out.append(
-            (
-                "Does evolution improve on the same strategies kept unchanged?",
-                f"{'Yes' if ok else 'Not consistently'}: " + "; ".join(parts) + ".",
-            )
-        )
+        out.append(("Does evolution improve on the same strategies kept unchanged?", _judge(same_start) + "; ".join(parts) + "."))
 
     if ("evolving", "static_tuned") in comps:
         c = comps[("evolving", "static_tuned")]
-        ok = c["wins"] > c["seeds"] / 2
         out.append(
             (
                 "Does evolution from a random start match a strategy tuned offline by grid search?",
-                f"{'Yes' if ok else 'No'}: wins in {c['wins']}/{c['seeds']} seeds "
+                _judge([c]) + f"wins in {c['wins']}/{c['seeds']} seeds "
                 f"(capital multiple {c['capital_multiple_diff']['mean']:+.2f}).",
             )
         )
@@ -284,6 +296,13 @@ def render_report(summary: dict[str, Any]) -> str:
     ]
     for question, answer in verdicts(summary):
         lines += [f"- **{question}** {answer}"]
+    if "api" in summary:
+        api = summary["api"]
+        lines += [
+            "",
+            f"Paid API: {api['calls']} calls, ${api['spent_usd']:.4f} of real money "
+            "(priced from the token usage the API reported).",
+        ]
 
     lines += ["", "## Results by arm", ""]
     lines.append("| Arm | " + " | ".join(label for _, label, _ in METRICS) + " |")

@@ -17,15 +17,21 @@ promises on top of it.
    exists only because the owner of that machine installed and started it.
    Future network features will keep this property: joining is an action of
    the machine's owner, never of an agent.
-3. **No uncontrolled network access.** The only network client is the local
-   Ollama client, and every URL is checked against `sandbox.allowed_hosts`
-   (local machine only by default). Agents cannot browse, call APIs or contact
-   people.
-4. **No autonomous money movement.** Simulated credits never leave the
+3. **No uncontrolled network access.** The only network clients are the local
+   Ollama client and, if the owner enables it, one paid model API. Every URL
+   is checked against `sandbox.allowed_hosts` (local machine only by default;
+   the owner adds e.g. `api.deepseek.com` explicitly). Agents cannot browse,
+   call other APIs or contact people.
+4. **Paid API spending has a hard cap.** `sandbox.max_api_spend_usd` defaults
+   to 0, which allows no paid call at all. Every call is priced from the token
+   usage the API reports, and a call is refused *before* it is sent if its
+   worst case could exceed the cap. API keys are read from an environment
+   variable and never written to configuration, results or logs.
+5. **No autonomous money movement.** Simulated credits never leave the
    process. In owner mode, agents draft results; the owner decides what to
    deliver and records what was actually paid. Agents have no payment
    credentials and no way to use any.
-5. **Everything is recorded.** Every money movement goes to a ledger, every
+6. **Everything is recorded.** Every money movement goes to a ledger, every
    model answer of the real-model experiment is saved, and every drafted result
    in owner mode is a file the owner can read before anything happens.
 
@@ -35,11 +41,12 @@ promises on top of it.
 |---|---|
 | population size, spawns per generation | `Sandbox.check_population`, `Sandbox.check_spawn` (called by `EvolutionEngine` before every birth) |
 | owner budget | `Sandbox.check_allocation` (called by `Economy.fund`) |
-| network hosts | `Sandbox.check_url` (called when an `OllamaClient` is created) |
+| network hosts | `Sandbox.check_url` (called when an `OllamaClient` or `APIClient` is created) |
+| real money spent on paid APIs | `APIClient.generate` refuses calls whose worst case would pass `sandbox.max_api_spend_usd` |
 | output length per model call | `Sandbox.clamp_tokens` |
 | request time | `sandbox.request_timeout` |
 
-Tests in `tests/test_sandbox.py` and `tests/test_evolution.py` check these.
+Tests in `tests/test_sandbox.py`, `tests/test_api_client.py` and `tests/test_evolution.py` check these.
 
 ## Optimizing for profit
 

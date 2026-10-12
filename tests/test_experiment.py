@@ -56,3 +56,15 @@ def test_tuned_genomes_split_specialists_by_demand(small_cfg):
     genomes = tuned_genomes(small_cfg.baseline, {"a": 0.5, "b": 0.3, "c": 0.2}, 10)
     specialties = [g.specialty for g in genomes]
     assert (specialties.count("a"), specialties.count("b"), specialties.count("c")) == (5, 3, 2)
+
+
+def test_verdicts_separate_wins_losses_and_ties():
+    from astra.results import _judge
+
+    def comparison(diff, wins, seeds):
+        return {"capital_multiple_diff": {"mean": diff}, "wins": wins, "seeds": seeds}
+
+    assert _judge([comparison(1.2, 9, 10)]) == "Yes: "
+    assert _judge([comparison(-4.7, 0, 10)]) == "No: "
+    assert _judge([comparison(0.004, 1, 1)]).startswith("No clear difference (one seed")
+    assert _judge([comparison(1.2, 9, 10), comparison(-0.5, 3, 10)]).startswith("Not consistently")

@@ -11,6 +11,7 @@ astra/
   evolution.py      bankruptcy, defunding, replacement, reproduction, mutation, crossover
   sandbox.py        hard limits set by the owner: population, spawns, budget, network hosts, tokens
   ollama_client.py  minimal Ollama HTTP client (standard library only)
+  api_client.py     OpenAI-compatible paid API client (DeepSeek) with a hard spending cap; model router
   verifiable.py     auto-checkable micro-tasks for real models
   experiment.py     runs arms x seeds on identical task streams
   results.py        summary statistics, Markdown report, SVG chart, CSV/JSONL output
@@ -43,7 +44,7 @@ EvolutionEngine.step                     bankrupt -> defunded -> outcompeted -> 
 |---|---|---|
 | `focus` | weights summing to 1 | specialization across task categories |
 | `model` | one of the models | which model does the work |
-| `effort` | 0.5-2.0 | compute multiplier: costs more, raises quality (real models: step-by-step reasoning and a larger output budget) |
+| `effort` | 0.5-2.0 | compute multiplier: costs more, raises quality (real models: step-by-step reasoning and a larger output budget; on the API, effort >= 1 turns thinking on, >= 1.6 at high effort) |
 | `price_level` | 0.3-1.0 | price as a share of the client's budget |
 | `max_difficulty` | 0.1-1.0 | hardest task the agent will take |
 | `min_confidence` | 0.05-0.85 | lowest estimated success rate at which it still bids |

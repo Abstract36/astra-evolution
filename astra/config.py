@@ -156,6 +156,7 @@ class SandboxConfig:
     allowed_hosts: list[str] = field(default_factory=lambda: ["127.0.0.1", "localhost", "::1"])
     request_timeout: float = 300.0
     max_tokens_per_call: int = 4096
+    max_api_spend_usd: float = 0.0  # real money; 0 means no paid API call is allowed
 
 
 @dataclass
@@ -176,6 +177,7 @@ def _default_verifiable() -> list[VerifiableCategory]:
 
 @dataclass
 class OllamaConfig:
+    enabled: bool = True
     host: str = "http://127.0.0.1:11434"
     models: list[str] = field(default_factory=list)
     max_model_size_gb: float = 10.0
@@ -185,6 +187,32 @@ class OllamaConfig:
     base_tokens: int = 256
     owner_tokens: int = 1500
     categories: list[VerifiableCategory] = field(default_factory=_default_verifiable)
+
+
+@dataclass
+class APIModelSpec:
+    """A paid model and its prices in USD per million tokens."""
+
+    name: str
+    input_usd_per_mtok: float = 0.3
+    cached_input_usd_per_mtok: float = 0.006
+    output_usd_per_mtok: float = 1.2
+
+
+def _default_api_models() -> list[APIModelSpec]:
+    return [APIModelSpec("deepseek-flash", 0.3, 0.006, 1.2)]
+
+
+@dataclass
+class APIConfig:
+    """An OpenAI-compatible chat API (DeepSeek by default). Off unless enabled."""
+
+    enabled: bool = False
+    base_url: str = "https://api.deepseek.com"
+    api_key_env: str = "DEEPSEEK_API_KEY"
+    credits_per_usd: float = 1000.0
+    thinking_tokens: int = 1024  # extra output budget when an agent's effort turns thinking on
+    models: list[APIModelSpec] = field(default_factory=_default_api_models)
 
 
 @dataclass
@@ -198,6 +226,7 @@ class Config:
     baseline: BaselineConfig = field(default_factory=BaselineConfig)
     sandbox: SandboxConfig = field(default_factory=SandboxConfig)
     ollama: OllamaConfig = field(default_factory=OllamaConfig)
+    api: APIConfig = field(default_factory=APIConfig)
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)
@@ -233,6 +262,8 @@ class Config:
                 raise ConfigError(f"market.shocks: unknown category {shock.category!r}")
         if len(self.market.size_range) != 2 or len(self.market.competitor_price_range) != 2:
             raise ConfigError("market.size_range and market.competitor_price_range need two numbers")
+        if self.api.enabled and self.sandbox.max_api_spend_usd <= 0:
+            raise ConfigError("api.enabled needs sandbox.max_api_spend_usd > 0 (a cap on real spending)")
         if not 0 <= self.evolution.cull_fraction < 1:
             raise ConfigError("evolution.cull_fraction must be in [0, 1)")
         return self

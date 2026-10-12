@@ -18,7 +18,12 @@ money. Every draft is a file you read first.
    - set `ollama.cost_per_second` to what a second of generation really costs
      you (electricity plus hardware wear);
    - set `economy.initial_budget` and `sandbox.owner_budget`.
-3. Create a workspace:
+3. Optionally add a paid API next to your local models (better drafts, real
+   cost per token): copy the `api:` section and `sandbox.max_api_spend_usd`
+   from [`config/deepseek.yaml`](../config/deepseek.yaml), add the API host to
+   `sandbox.allowed_hosts`, set `api.credits_per_usd` to how many of your money
+   units one dollar is, and `export DEEPSEEK_API_KEY=...` before running.
+4. Create a workspace:
 
    ```bash
    astra init --workspace my-node --config config/owner.yaml
