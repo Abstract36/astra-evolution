@@ -1,0 +1,115 @@
+# Astra Evolution: the first experiment.
+#
+# 20 agents get a virtual budget, compete for tasks in a simulated market and
+# are selected by net profit. Successful strategies are passed to children with
+# small mutations. Four arms run on identical task streams:
+#
+#   evolving        random strategies + evolution
+#   static_random   the same random strategies, never changed
+#   static_tuned    a fixed strategy found by grid search, never changed
+#   evolving_tuned  the grid-search strategy + evolution
+#
+# This file mirrors the built-in defaults; `astra run` with no --config gives
+# the same result. Override any value with --set, e.g.
+#   astra run --set evolution.mutation_rate=0.5 --set market.demand_drift=0.3
+
+experiment:
+  name: first_evolution
+  generations: 100
+  seeds: 10                # independent repetitions (seeds base_seed .. base_seed+seeds-1)
+  base_seed: 1
+  population_size: 20      # agents per arm at the start
+  arms: [evolving, static_random, static_tuned, evolving_tuned]
+  results_dir: results
+  save_ledger: false       # true writes every money movement to ledger.csv
+
+market:
+  tasks_per_generation: 120
+  agent_capacity: 5        # tasks one agent can take per generation
+  size_range: [1.0, 5.0]   # amount of work per task; scales cost and price
+  demand_drift: 0.1        # how fast demand per category wanders (log-normal step)
+  internal_competition: false  # true: agents underbid each other for the same client
+  external_competition: true   # outside providers bid on every task
+  competitor_price_range: [0.6, 1.0]  # their price, as a share of the client's budget
+  competitor_reputation: 0.6
+  shocks: []               # e.g. [{generation: 50, category: automation, multiplier: 4}]
+  categories:
+    - {name: software_dev, demand: 0.30, pay_rate: 2.6, difficulty: 0.60}
+    - {name: data_processing, demand: 0.25, pay_rate: 1.8, difficulty: 0.40}
+    - {name: automation, demand: 0.20, pay_rate: 2.2, difficulty: 0.50}
+    - {name: market_research, demand: 0.15, pay_rate: 2.0, difficulty: 0.45}
+    - {name: digital_products, demand: 0.10, pay_rate: 2.4, difficulty: 0.55}
+
+# Simulated models: quality raises the chance of success, cost is per unit of work.
+models:
+  - {name: small, quality: 0.62, cost_per_unit: 0.35}
+  - {name: medium, quality: 0.75, cost_per_unit: 0.90}
+  - {name: large, quality: 0.88, cost_per_unit: 2.20}
+
+economy:
+  initial_budget: 100.0    # credits per agent, from the owner budget
+  upkeep: 1.0              # fixed cost per agent per generation
+  initial_reputation: 0.5
+  reputation_alpha: 0.2    # how fast reputation follows recent results
+  bid_cost: 0.1            # cost of putting an offer in front of a client
+  review_cost_overhead: 0.35  # extra compute for a self-review pass
+  cost_noise: 0.1
+  success_sharpness: 10.0  # how sharply success depends on capability - difficulty
+
+agent:
+  min_focus_to_bid: 0.05   # ignore categories with less specialization than this
+  prior_success: 0.6       # success rate assumed before any experience
+  prior_weight: 2.0
+  prior_win_rate: 0.5      # client acceptance assumed before any offers
+  exploration_trials: 2    # tries per category before the agent trusts its memory
+
+evolution:
+  defund_after: 4          # losing generations in a row before funding is withdrawn
+  cull_fraction: 0.1       # share of weakest agents replaced when the population is full
+  fitness_window: 3        # generations of profit averaged into fitness
+  spawn_cost: 5.0          # fee for creating a child
+  child_endowment: 25.0    # money the child starts with
+  parent_reserve: 20.0     # money a parent must keep after paying for a child
+  payback_generations: 15.0  # a parent's profit must repay a child within this many generations
+  reinvest_returned: false # true: the treasury reinvests money taken back from defunded agents
+  tournament_size: 3
+  crossover_rate: 0.3
+  mutation_rate: 0.3
+  mutation_scale: 0.15
+  reputation_inheritance: 0.5
+  memory_inheritance: 0.5
+
+# Fixed strategy for the *_tuned arms: best of 360 combinations on tuning seeds
+# 101-103, which the evaluation never uses.
+baseline:
+  model: medium
+  effort: 0.75
+  price_level: 0.8
+  max_difficulty: 0.65
+  min_confidence: 0.45
+  review: false
+
+# Hard limits set by the owner. Nothing in Astra can exceed them.
+sandbox:
+  max_population: 20
+  max_spawns_per_generation: 6
+  owner_budget: 2000.0
+  allowed_hosts: [127.0.0.1, localhost, "::1"]
+  request_timeout: 300.0
+  max_tokens_per_call: 4096
+
+# Used only by `astra ollama-run` and owner mode.
+ollama:
+  host: http://127.0.0.1:11434
+  models: []               # empty = every installed model up to max_model_size_gb
+  max_model_size_gb: 10.0
+  cost_per_second: 0.5     # credits per second of measured compute time
+  temperature: 0.2
+  think: false             # disable the thinking phase of reasoning models
+  base_tokens: 256         # output budget per answer, multiplied by the agent's effort
+  owner_tokens: 1500
+  categories:
+    - {name: arithmetic, base_price: 4.0, demand: 0.25}
+    - {name: sorting, base_price: 4.0, demand: 0.25}
+    - {name: counting, base_price: 4.0, demand: 0.25}
+    - {name: extraction, base_price: 4.0, demand: 0.25}

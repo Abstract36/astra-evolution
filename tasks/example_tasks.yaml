@@ -1,0 +1,64 @@
+# Example tasks for owner mode. Replace them with real work you have been paid
+# (or are about to be paid) for. Fields:
+#
+#   id          unique, letters/digits/._- only
+#   category    any name; agents specialize per category
+#   title       short name (optional)
+#   prompt      the full brief, as you would give it to a freelancer
+#   price       what the client pays if the result is accepted (your money unit)
+#   difficulty  0..1, your estimate (optional, default 0.5)
+#   check       manual (default) or {type: exact|contains|regex, value: ...}
+#               A failed automatic check rejects the draft without asking you.
+
+tasks:
+  - id: coffee-landing-01
+    category: copywriting
+    title: Landing page copy for a coffee shop
+    price: 40
+    difficulty: 0.4
+    prompt: |
+      Write landing page copy for "North Bean", a small specialty coffee shop
+      that roasts its own beans and opens at 6 am for commuters. Include a
+      headline, a subheading, three short benefit blocks and a call to action.
+      Friendly, confident tone, no clichés. Under 200 words.
+
+  - id: csv-cleanup-01
+    category: data_processing
+    title: Normalize a messy contact list
+    price: 25
+    difficulty: 0.3
+    prompt: |
+      Convert this list into CSV with the columns name,email,city. Fix
+      capitalization of names and cities, lowercase the e-mails, drop rows
+      without an e-mail. Output only the CSV.
+
+      JOHN smith; John.Smith@Example.COM; new york
+      maria garcia - maria.g@mail.org - madrid
+      Li Wei, no email, Beijing
+      ANNA KOWALSKA | anna.k@poczta.pl | warsaw
+    check: {type: contains, value: "anna.k@poczta.pl"}
+
+  - id: python-slugify-01
+    category: software_dev
+    title: Python slug function with tests
+    price: 60
+    difficulty: 0.5
+    prompt: |
+      Write a Python function slugify(text: str) -> str that lowercases the
+      text, transliterates accented Latin letters to ASCII, replaces any run of
+      non-alphanumeric characters with a single hyphen and strips leading and
+      trailing hyphens. Add pytest tests covering at least five cases. Use only
+      the standard library.
+    check: {type: regex, value: "def slugify\\("}
+
+  - id: market-scan-01
+    category: research
+    title: Competitor overview for a meal-kit startup
+    price: 50
+    difficulty: 0.6
+    prompt: |
+      Give a structured overview of the typical competitor landscape for a new
+      meal-kit delivery startup in a mid-sized European city: types of
+      competitors, how they usually price, common weaknesses a newcomer can
+      exploit, and five questions the founders should research next. Clearly
+      separate general knowledge from anything that would need checking.

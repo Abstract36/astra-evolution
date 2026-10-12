@@ -1,0 +1,48 @@
+# Real local models on automatically checked micro-tasks (arithmetic, sorting,
+# letter counting, e-mail extraction). Every agent runs its own Ollama model;
+# its compute cost is the measured generation time x ollama.cost_per_second.
+#
+#   astra ollama-check                # what will be used
+#   astra ollama-run                  # run it (roughly 10-40 minutes on one consumer GPU)
+#
+# Values not listed here come from the defaults (see config/default.yaml).
+
+experiment:
+  name: ollama_evolution
+  generations: 10
+  seeds: 1
+  population_size: 10
+  arms: [evolving, static_random]
+
+market:
+  tasks_per_generation: 20
+  agent_capacity: 4
+  external_competition: false  # these tasks have no outside bidders
+
+economy:
+  initial_budget: 30.0
+  upkeep: 0.5
+  bid_cost: 0.0
+
+agent:
+  exploration_trials: 2
+
+evolution:
+  defund_after: 3
+  cull_fraction: 0.2
+  fitness_window: 2
+  spawn_cost: 1.0
+  child_endowment: 10.0
+  parent_reserve: 5.0
+  payback_generations: 10.0
+
+sandbox:
+  max_population: 10
+  max_spawns_per_generation: 2
+  owner_budget: 300.0
+
+ollama:
+  models: []               # empty = every installed model up to max_model_size_gb
+  max_model_size_gb: 10.0
+  cost_per_second: 0.4
+  think: false

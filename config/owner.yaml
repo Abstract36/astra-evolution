@@ -1,0 +1,54 @@
+# Owner mode: real tasks, real compute, real payments recorded by you.
+#
+# Pick one money unit (dollars, euros, ...) and use it everywhere: task prices,
+# the cost of compute and the agents' budgets. Agents never move money; they
+# only draft results. You deliver them and record what the client paid.
+#
+#   astra init --workspace my-node
+#   astra add-tasks --workspace my-node tasks/example_tasks.yaml
+#   astra work --workspace my-node
+#   astra review --workspace my-node
+#   astra evolve --workspace my-node
+#
+# Values not listed here come from the defaults (see config/default.yaml).
+
+experiment:
+  name: owner_node
+  population_size: 6
+
+market:
+  agent_capacity: 3        # tasks one agent drafts per generation
+  external_competition: false
+  categories:              # starting specializations; new categories in task files are added automatically
+    - {name: copywriting}
+    - {name: data_processing}
+    - {name: software_dev}
+    - {name: research}
+
+economy:
+  initial_budget: 20.0     # per agent, in your money unit
+  upkeep: 0.0              # fixed cost per agent per generation (e.g. a share of hardware wear)
+  bid_cost: 0.0
+
+agent:
+  exploration_trials: 1
+
+evolution:
+  defund_after: 3
+  cull_fraction: 0.0
+  spawn_cost: 0.0
+  child_endowment: 5.0
+  parent_reserve: 5.0
+  payback_generations: 10.0
+
+sandbox:
+  max_population: 10
+  max_spawns_per_generation: 2
+  owner_budget: 200.0      # the most you allow the agents to be funded with
+
+ollama:
+  models: []               # empty = every installed model up to max_model_size_gb
+  max_model_size_gb: 10.0
+  cost_per_second: 0.0002  # your real cost of one second of generation (electricity + hardware)
+  temperature: 0.4
+  owner_tokens: 1500

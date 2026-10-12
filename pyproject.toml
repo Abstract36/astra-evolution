@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "astra-evolution"
+version = "0.1.0"
+description = "An evolving population of economic AI agents: selection by net profit, inheritance and mutation of strategies."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0"]
+keywords = ["evolutionary-algorithms", "ai-agents", "llm", "ollama", "agent-economics", "simulation"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+astra = "astra.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Abstract36/astra-evolution"
+
+[tool.setuptools.packages.find]
+include = ["astra*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
