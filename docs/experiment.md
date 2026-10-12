@@ -149,11 +149,30 @@ checked automatically (arithmetic, sorting, letter counting and e-mail
 extraction). Agents choose among the installed models; the cost of an attempt
 is the generation time actually measured, times `ollama.cost_per_second`.
 
-See [results/ollama_evolution/report.md](results/ollama_evolution/report.md)
-for a run on one consumer GPU (RTX 2070) with `qwen3.5:4b` and
-`Dolphin3.0-Llama3.1-8B`, and `attempts.jsonl` next to it for every answer the
-models gave. That run is small (one seed, ten generations), so read it as a
-working demonstration, not as evidence.
+A run on one consumer GPU (RTX 2070) with `qwen3.5:4b` and
+`Dolphin3.0-Llama3.1-8B`: 10 agents, 10 generations, 20 tasks per generation
+([report](results/ollama_evolution/report.md), every model answer in
+[attempts.jsonl](results/ollama_evolution/attempts.jsonl)).
+
+| Arm | Capital multiple | Revenue / full cost | Profit per agent per generation (last quarter) |
+|---|---:|---:|---:|
+| Evolving (random start) | x1.26 | 1.61 | +3.49 |
+| Static (random) | x1.02 | 1.05 | -0.12 |
+
+What the evolving population did with real models, comparing generations 0-4
+with 5-9:
+
+- **dropped self-review** (40% of agents to 0%): on these tasks a second pass
+  doubled the compute bill without fixing enough answers;
+- **divided the work by model**: Dolphin took arithmetic and e-mail
+  extraction, where it is fast and mostly right, and qwen took counting and
+  sorting;
+- **cut compute spending from 59 to 37 credits while revenue rose from 92 to
+  114**. The unchanged population went from 77 to 73 in revenue over the same
+  generations.
+
+It is one seed and ten generations, so read it as a working demonstration on
+real models, not as statistical evidence.
 
 A calibration run before it found that reasoning models (`deepseek-r1` 7B, 14B
 and 70B) kept reasoning even with thinking disabled, used up every token and
