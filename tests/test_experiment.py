@@ -13,8 +13,8 @@ def test_experiment_writes_all_outputs(small_cfg, tmp_path):
     summary = run_experiment(small_cfg, tmp_path)
     for name in ("config.yaml", "generations.csv", "agents.jsonl", "summary.json", "report.md", "capital.svg"):
         assert (tmp_path / name).exists(), name
-    assert set(summary["arms"]) == set(ARMS)
-    assert len(summary["per_run"]) == len(ARMS) * small_cfg.experiment.seeds
+    assert list(summary["arms"]) == small_cfg.experiment.arms
+    assert len(summary["per_run"]) == len(small_cfg.experiment.arms) * small_cfg.experiment.seeds
     assert json.loads((tmp_path / "summary.json").read_text())["generations"] == small_cfg.experiment.generations
     report = (tmp_path / "report.md").read_text()
     assert "## Verdict" in report and "capital.svg" in report

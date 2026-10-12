@@ -13,6 +13,8 @@ astra/
   ollama_client.py  minimal Ollama HTTP client (standard library only)
   api_client.py     OpenAI-compatible paid API client (DeepSeek) with a hard spending cap; model router
   verifiable.py     auto-checkable micro-tasks for real models
+  hard_tasks.py     harder auto-checked tasks: code against hidden tests (sandboxed), SQL, invoices, dates
+  router.py         the learning-router baseline: contextual Thompson sampling over a fixed menu
   experiment.py     runs arms x seeds on identical task streams
   results.py        summary statistics, Markdown report, SVG chart, CSV/JSONL output
   owner.py          owner mode: real tasks, local drafting, human review, persistent workspace

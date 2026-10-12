@@ -20,6 +20,7 @@ ARMS: dict[str, tuple[str, bool]] = {
     "static_random": ("random", False),
     "static_tuned": ("tuned", False),
     "evolving_tuned": ("tuned", True),
+    "router": ("menu", False),  # a learning router over a fixed menu of strategies (see router.py)
 }
 
 
@@ -34,7 +35,9 @@ class ExperimentConfig:
     seeds: int = 10
     base_seed: int = 1
     population_size: int = 20
-    arms: list[str] = field(default_factory=lambda: list(ARMS))
+    arms: list[str] = field(
+        default_factory=lambda: ["evolving", "static_random", "static_tuned", "evolving_tuned"]
+    )
     results_dir: str = "results"
     save_ledger: bool = False
 
@@ -150,6 +153,16 @@ class BaselineConfig:
 
 
 @dataclass
+class RouterConfig:
+    """The menu of the ``router`` arm: every category x model x effort x price level x review."""
+
+    efforts: list[float] = field(default_factory=lambda: [0.75, 1.25])
+    price_levels: list[float] = field(default_factory=lambda: [0.6, 0.9])
+    review: list[bool] = field(default_factory=lambda: [False])
+    difficulty_bands: int = 4  # success rates are learned per category and per band of task difficulty
+
+
+@dataclass
 class SandboxConfig:
     max_population: int = 20
     max_spawns_per_generation: int = 6
@@ -225,6 +238,7 @@ class Config:
     agent: AgentSettings = field(default_factory=AgentSettings)
     evolution: EvolutionConfig = field(default_factory=EvolutionConfig)
     baseline: BaselineConfig = field(default_factory=BaselineConfig)
+    router: RouterConfig = field(default_factory=RouterConfig)
     sandbox: SandboxConfig = field(default_factory=SandboxConfig)
     ollama: OllamaConfig = field(default_factory=OllamaConfig)
     api: APIConfig = field(default_factory=APIConfig)

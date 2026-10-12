@@ -11,7 +11,7 @@ def test_default_yaml_mirrors_builtin_defaults():
     assert load_config(ROOT / "config" / "default.yaml").to_dict() == Config().to_dict()
 
 
-@pytest.mark.parametrize("name", ["ollama.yaml", "owner.yaml", "deepseek.yaml"])
+@pytest.mark.parametrize("name", ["ollama.yaml", "owner.yaml", "deepseek.yaml", "router_vs_evolution.yaml", "hard_tasks.yaml"])
 def test_shipped_configs_load(name):
     load_config(ROOT / "config" / name)
 

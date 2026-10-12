@@ -43,8 +43,12 @@ funding. Selection runs on measured results, not on anyone's opinion.
 - **Evolving agents earn more than their full cost** (compute, sales, upkeep
   and the cost of their children) and grow their capital.
 - **Not solved yet:** from random strategies, 100 generations do not reach what
-  an offline grid search finds with a perfect simulator (0/10 seeds). That is
-  the next research question.
+  an offline grid search finds with a perfect simulator (0/10 seeds).
+- **A simple learning router beats evolution from scratch** (10/10 seeds, x5.29
+  vs. x1.45): evolved agents are as profitable per agent, but self-financed
+  growth keeps most of the capital idle. Whether evolution is worth its
+  complexity is the open question; see the
+  [research plan](docs/research_plan.md).
 - **With real models** (local Ollama models vs. DeepSeek's API, real token
   bills): `deepseek-flash` solved 188 of 188 tasks at about $0.0002 each. Once
   the evolving population was allowed to refill after defunding, evolution won

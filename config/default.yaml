@@ -90,6 +90,16 @@ baseline:
   min_confidence: 0.45
   review: false
 
+# The `router` arm (add it to experiment.arms): one firm that learns which option
+# to use for each task by Thompson sampling, over every category x model x
+# effort x price level x review. No inheritance, no selection: the simple
+# baseline evolution has to beat.
+router:
+  efforts: [0.75, 1.25]
+  price_levels: [0.6, 0.9]
+  review: [false]
+  difficulty_bands: 4      # success rates are learned per category and per band of task difficulty
+
 # Hard limits set by the owner. Nothing in Astra can exceed them.
 sandbox:
   max_population: 20

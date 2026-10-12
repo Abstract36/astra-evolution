@@ -125,6 +125,50 @@ Same 10 seeds, one change at a time (`astra run --set ...`):
   population grows (8 to 15 agents from a random start) and earns less,
   especially when the treasury also funds those children.
 
+## Is evolution needed? A learning router (simulation)
+
+The strongest simple alternative to evolution is a learning router: one firm
+with one wallet and a fixed menu of ways to do the work (every category x
+model x effort x price level), which picks an option for each task by
+Thompson sampling and learns from the outcome. No inheritance, no selection.
+It gets the same capital, upkeep and capacity as a full population of 20
+agents ([`astra/router.py`](../astra/router.py);
+[report](results/router_simulation/report.md)).
+
+| Arm | Capital multiple | Profit per agent per generation (last quarter) | Tasks per generation |
+|---|---:|---:|---:|
+| Evolving (random start) | x1.45 ± 0.61 | +2.87 | 18 |
+| **Learning router** | **x5.29 ± 1.07** | +2.70 | 86 |
+| Static (hand-tuned by grid search) | x6.19 ± 1.05 | +4.77 | 57 |
+| Evolving (hand-tuned start) | x8.46 ± 0.57 | +7.96 | 76 |
+
+- **The router beats evolution from a random start in 10/10 seeds**, and
+  without any offline tuning it comes close to the grid-search strategy.
+- **Evolution does not lose on the quality of its strategies.** Its surviving
+  agents earn as much per agent as the router does (+2.87 vs. +2.70). It loses
+  on scale: most random agents are defunded early, and self-financed growth is
+  slow, so only about 6 of 20 slots ever work. The router keeps all of its
+  capital working from the first generation.
+- So in this market the bottleneck of evolution is how fast capital reaches
+  good strategies, not finding them. Whether that holds with real models is
+  experiment 5 of the [research plan](research_plan.md), running now.
+
+Making the router a fair opponent took three fixes, each of which had made it
+look much worse than it is (capital x0.20 before them). They are worth knowing
+for any routing system:
+
+1. **Condition on what you can see.** A router that learned success rates per
+   category only, ignoring the task's difficulty, kept taking tasks too hard
+   for the chosen model.
+2. **Explore client acceptance, not only quality.** Using the mean acceptance
+   rate, a few early lost offers convinced it that offers do not sell; it
+   stopped making them and never learned otherwise.
+3. **Do not pool reputation across the whole firm.** One reputation updated
+   after every one of about 90 tasks per generation dropped to its floor after
+   a short run of failures, clients stopped accepting, and with no work it
+   could never recover. Each option now keeps its own reputation, as each
+   agent in a population does.
+
 ## Design lessons
 
 Building the selection rules took several iterations. Each failure below is a
@@ -259,6 +303,12 @@ by one and combined with `astra merge`
   everything, growing into harder unserved work pays.
 - Real money spent: 761 API calls, $0.11 at peak prices (the balance moved
   from $19.34 to $19.29).
+- **Caveat: part of this gain is price, not better work.** These runs had no
+  outside competitor, so clients accepted any price up to their budget, and
+  the evolved price level rose from 0.68 to 0.81. The other changes are real
+  (agents dropped `qwen3.5:4b` and `deepseek-v4-pro` and took harder tasks),
+  but how much of the difference each explains is not measured. Experiments 5
+  and 6 run with an outside competitor.
 
 ## Calibration of reasoning models
 

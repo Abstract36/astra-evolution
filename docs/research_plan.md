@@ -45,7 +45,8 @@ Out of scope, on purpose (see [safety.md](safety.md)):
 | Nine ablations | Letting agents of one population underbid each other costs about a fifth of the capital. The advantage holds in a stationary market. |
 | Local models (qwen3.5:4b, Dolphin 8B), 1 seed | Evolving x1.26 vs. unchanged x1.02. Evolution dropped self-review and split work between the models. |
 | Local models vs. DeepSeek API, 1 seed | Tie at x1.14. `deepseek-flash` solved 188 of 188 tasks at about $0.0002 each. Agents learning from their own experience captured most of the gain without selection. |
-| Same, population refills after defunding, 5 seeds ([details](experiment.md#letting-the-population-refill-5-seeds)) | Evolution wins in 4 of 5 seeds (x1.17 vs. x1.03; revenue / full cost 1.70 vs. 1.11). It rescues a bad starting population and costs a little when the start is already good. Not yet statistically significant. |
+| Same, population refills after defunding, 5 seeds ([details](experiment.md#letting-the-population-refill-5-seeds)) | Evolution wins in 4 of 5 seeds (x1.17 vs. x1.03; revenue / full cost 1.70 vs. 1.11). It rescues a bad starting population and costs a little when the start is already good. Not yet statistically significant, and part of the gain came from raising prices in a market without competition. |
+| Learning router vs. evolution, simulation, 10 seeds ([details](experiment.md#is-evolution-needed-a-learning-router-simulation)) | **The router wins 10/10** (x5.29 vs. x1.45). Evolved agents are as profitable per agent, but self-financed growth keeps only about 6 of 20 slots working. |
 
 ## Remaining experiments
 
@@ -54,8 +55,8 @@ Out of scope, on purpose (see [safety.md](safety.md)):
 | # | Experiment | Question | Counts as "yes" |
 |---|---|---|---|
 | 4 | Refilling population, 5 seeds (**done: 4 of 5, criterion met**) | Does refilling after defunding let evolution beat the unchanged population on real models? | Wins in at least 4 of 5 seeds |
-| 5 | A simple learning router (multi-armed bandit over models per task category) in place of evolution | Is evolution needed at all, or does a much simpler learner do as well? | Evolution beats the router in at least 9 of 10 seeds |
-| 6 | Harder auto-checked tasks: code with unit tests, extraction from messy text, SQL | When no single model wins everything, does selection find better strategies? | Evolution beats both controls in at least 9 of 10 seeds |
+| 5 | A simple learning router (contextual Thompson-sampling bandit over a menu of strategies) in place of evolution | Is evolution needed at all, or does a much simpler learner do as well? | Evolution beats the router in at least 9 of 10 seeds. **Simulation: no (0/10). Real models: running.** |
+| 6 | Harder auto-checked tasks: code with hidden unit tests, SQL, invoice extraction from messy text, business-day arithmetic (**running**) | When no single model wins everything, does selection find better strategies? | Evolution beats both controls in at least 9 of 10 seeds |
 | 7 | The best variant from 4-6, 10 seeds | Is the result statistically sound? | At least 9 of 10 paired wins (sign test p of about 0.01) |
 | 8 | Task prices swept from low to high | At which price per task does a local model beat the API, and the reverse? | A break-even curve per task category |
 

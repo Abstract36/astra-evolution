@@ -1,0 +1,70 @@
+# Experiment 6 of the research plan: harder auto-checked tasks, where no single
+# model wins everything. Writing a Python function against hidden unit tests,
+# a SQLite query, extracting invoice fields from messy text, and business-day
+# arithmetic. Same three arms as experiment 5.
+#
+#   export DEEPSEEK_API_KEY=sk-...
+#   astra llm-run --config config/hard_tasks.yaml --set experiment.base_seed=1
+#
+# Values not listed here come from the defaults (see config/default.yaml).
+
+experiment:
+  name: hard_tasks
+  generations: 12
+  seeds: 1
+  population_size: 12
+  arms: [evolving, static_random, router]
+
+market:
+  tasks_per_generation: 30
+  agent_capacity: 4
+  external_competition: true  # outside bidders keep prices honest
+
+economy:
+  initial_budget: 20.0
+  upkeep: 0.2
+  bid_cost: 0.0
+
+agent:
+  exploration_trials: 2
+
+evolution:
+  defund_after: 3
+  cull_fraction: 0.2
+  fitness_window: 2
+  spawn_cost: 0.5
+  child_endowment: 6.0
+  parent_reserve: 3.0
+  payback_generations: 25.0
+  reinvest_returned: true
+  target_unserved: true
+
+sandbox:
+  max_population: 12
+  max_spawns_per_generation: 3
+  owner_budget: 300.0
+  allowed_hosts: [127.0.0.1, localhost, "::1", api.deepseek.com]
+  max_api_spend_usd: 1.0   # hard cap on real money for the whole run
+
+ollama:
+  enabled: true
+  models: []
+  max_model_size_gb: 10.0
+  cost_per_second: 0.03
+  think: false
+  base_tokens: 512         # code needs room
+  categories:
+    - {name: code, base_price: 1.0}
+    - {name: sql, base_price: 1.0}
+    - {name: invoice, base_price: 1.0}
+    - {name: business_days, base_price: 1.0}
+
+api:
+  enabled: true
+  base_url: https://api.deepseek.com
+  api_key_env: DEEPSEEK_API_KEY
+  credits_per_usd: 1000.0
+  thinking_tokens: 1024    # effort >= 1 turns thinking on (>= 1.6: high effort)
+  models:
+    - {name: deepseek-flash, input_usd_per_mtok: 0.3, cached_input_usd_per_mtok: 0.006, output_usd_per_mtok: 1.2}
+    - {name: deepseek-v4-pro, input_usd_per_mtok: 1.32, cached_input_usd_per_mtok: 0.044, output_usd_per_mtok: 3.96}

@@ -95,6 +95,12 @@ class WinModel:
         b = self._bin(score)
         return (self.wins.get(b, 0.0) + self.prior * self.weight) / (self.offers.get(b, 0.0) + self.weight)
 
+    def sample(self, score: float, rng: random.Random) -> float:
+        """A draw from the posterior of the acceptance rate (for Thompson sampling)."""
+        b = self._bin(score)
+        offers, wins = self.offers.get(b, 0.0), self.wins.get(b, 0.0)
+        return rng.betavariate(wins + self.prior * self.weight, offers - wins + (1 - self.prior) * self.weight)
+
     def record(self, score: float, won: bool) -> None:
         b = self._bin(score)
         self.offers[b] = self.offers.get(b, 0.0) + 1

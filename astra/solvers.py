@@ -17,6 +17,7 @@ from .config import APIModelSpec, EconomyConfig, ModelSpec, OllamaConfig
 from .market import Task
 from .ollama_client import GenerateResult
 from .sandbox import Sandbox
+from .hard_tasks import ANSWER_FORMAT
 from .verifiable import check_answer
 
 
@@ -92,6 +93,16 @@ VERIFIABLE_REVIEW = (
     "solve the task again. Finish with the final answer on the last line, in the form "
     "'ANSWER: <answer>'.\n\nTask:\n{task}\n\nProposed solution:\n{draft}"
 )
+CODE_DIRECT = "Solve the task. Reply with only the {lang} code, in one ```{lang} code block."
+CODE_STEPWISE = (
+    "Solve the task. Think briefly about edge cases first, then give the final {lang} code "
+    "in one ```{lang} code block at the end."
+)
+CODE_REVIEW = (
+    "Below is a task and a proposed solution. Check it carefully against the task, including edge "
+    "cases, and fix any bug. Reply with the final {lang} code in one ```{lang} code block."
+    "\n\nTask:\n{task}\n\nProposed solution:\n{draft}"
+)
 OWNER_TASK = (
     "You are an expert in {category}. Complete the client's task below and deliver a finished, "
     "ready-to-use result, written in the language of the task.{plan}\n\n"
@@ -162,13 +173,19 @@ class LLMSolver:
 
     def attempt(self, agent: Agent, task: Task, rng: random.Random) -> Outcome:
         """Solve an auto-checkable task (see ``verifiable.py``)."""
-        style = VERIFIABLE_STEPWISE if agent.genome.effort >= 1.0 else VERIFIABLE_DIRECT
         question = task.payload["prompt"]
+        lang = {"code": "python", "sql": "sql"}.get(ANSWER_FORMAT.get(task.payload["kind"], ""))
+        if lang:
+            style = (CODE_STEPWISE if agent.genome.effort >= 1.0 else CODE_DIRECT).format(lang=lang)
+            review = CODE_REVIEW
+        else:
+            style = VERIFIABLE_STEPWISE if agent.genome.effort >= 1.0 else VERIFIABLE_DIRECT
+            review = VERIFIABLE_REVIEW
         first = self._generate(agent, f"{style}\n\nTask: {question}", self.cfg.base_tokens)
         text, seconds, cost = first.text, first.seconds, self.cost_of(first)
         if agent.genome.review:
             second = self._generate(
-                agent, VERIFIABLE_REVIEW.format(task=question, draft=text), self.cfg.base_tokens
+                agent, review.format(task=question, draft=text, lang=lang), self.cfg.base_tokens
             )
             text, seconds, cost = second.text, seconds + second.seconds, cost + self.cost_of(second)
         success = check_answer(task.payload["kind"], task.payload["answer"], text)

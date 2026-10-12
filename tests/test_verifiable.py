@@ -12,8 +12,8 @@ def format_answer(kind, answer):
     return ", ".join(map(str, answer))
 
 
-@pytest.mark.parametrize("category", sorted(GENERATORS))
-def test_expected_answers_pass_and_wrong_answers_fail(category):
+@pytest.mark.parametrize("category", ["arithmetic", "sorting", "counting", "extraction"])
+def test_expected_answers_pass_and_wrong_answers_fail(category):  # hard tasks: test_hard_tasks.py
     rng = random.Random(1)
     for difficulty in (0.0, 0.5, 1.0):
         prompt, answer, kind = GENERATORS[category](rng, difficulty)

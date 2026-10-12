@@ -19,6 +19,7 @@ from .evolution import EvolutionEngine
 from .market import RoundStats, SimulatedMarket, Task, WinModel, trade_round
 from .ollama_client import OllamaClient, discover_models
 from .population import Population, genome_stats
+from .router import run_router_arm
 from .sandbox import Sandbox
 from .solvers import LLMSolver, Outcome, SimulatedSolver, Solver, api_call_cost, local_call_cost
 from .verifiable import VerifiableMarket
@@ -103,26 +104,7 @@ def run_arm(
     result = ArmResult(arm, seed, initial_capital=economy.allocated)
 
     def on_attempt(task: Task, bid: Bid, outcome: Outcome) -> None:
-        result.attempts.append(
-            {
-                "arm": arm,
-                "seed": seed,
-                "generation": task.generation,
-                "task": task.id,
-                "category": task.category,
-                "difficulty": round(task.difficulty, 3),
-                "agent": bid.agent.id,
-                "model": bid.agent.genome.model,
-                "effort": round(bid.agent.genome.effort, 3),
-                "review": bid.agent.genome.review,
-                "price": round(bid.price, 4),
-                "success": outcome.success,
-                "cost": round(outcome.cost, 4),
-                "seconds": round(outcome.seconds, 3),
-                "expected": task.payload.get("answer"),
-                "output": outcome.output[-500:],
-            }
-        )
+        result.attempts.append(attempt_record(arm, seed, task, bid.agent, bid.price, outcome))
 
     for generation in range(cfg.experiment.generations):
         tasks = market.tasks_for(generation)
@@ -174,6 +156,29 @@ def run_arm(
     result.agents = [_agent_record(a, arm, seed) for a in population.all()]
     result.ledger = [dict(arm=arm, seed=seed, **t) for t in economy.ledger_rows()]
     return result
+
+
+def attempt_record(arm: str, seed: int, task: Task, agent: Agent, price: float, outcome: Outcome) -> dict[str, Any]:
+    """One line of attempts.jsonl: what was tried, by whom, and what it cost."""
+    expected = task.payload.get("answer")
+    return {
+        "arm": arm,
+        "seed": seed,
+        "generation": task.generation,
+        "task": task.id,
+        "category": task.category,
+        "difficulty": round(task.difficulty, 3),
+        "agent": agent.id,
+        "model": agent.genome.model,
+        "effort": round(agent.genome.effort, 3),
+        "review": agent.genome.review,
+        "price": round(price, 4),
+        "success": outcome.success,
+        "cost": round(outcome.cost, 4),
+        "seconds": round(outcome.seconds, 3),
+        "expected": expected if isinstance(expected, (str, int, float, list)) else None,
+        "output": outcome.output[-500:],
+    }
 
 
 def _generation_row(
@@ -252,7 +257,10 @@ def run_experiment(cfg: Config, out_dir: str | Path | None = None, progress: Pro
         start = _seed_genomes(cfg, seed, probe.categories, models, probe.demand)
         for arm in cfg.experiment.arms:
             market = SimulatedMarket(cfg.market, random.Random(seed))
-            result = run_arm(cfg, arm, seed, start[ARMS[arm][0]], market, solver, models)
+            if ARMS[arm][0] == "menu":
+                result = run_router_arm(cfg, seed, market, solver, models)
+            else:
+                result = run_arm(cfg, arm, seed, start[ARMS[arm][0]], market, solver, models)
             results.append(result)
             if progress is not None:
                 final = result.rows[-1]
@@ -264,6 +272,13 @@ def run_experiment(cfg: Config, out_dir: str | Path | None = None, progress: Pro
     if out_dir is not None:
         write_results(Path(out_dir), cfg, results, summary)
     return summary
+
+
+def _verifiable_market(cfg: Config, seed: int) -> VerifiableMarket:
+    competitor = cfg.market.competitor_price_range if cfg.market.external_competition else None
+    return VerifiableMarket(
+        cfg.ollama.categories, cfg.market.tasks_per_generation, random.Random(seed), competitor
+    )
 
 
 @dataclass
@@ -327,18 +342,21 @@ def run_llm_experiment(
     results = []
     for offset in range(cfg.experiment.seeds):
         seed = cfg.experiment.base_seed + offset
-        probe = VerifiableMarket(cfg.ollama.categories, cfg.market.tasks_per_generation, random.Random(seed))
+        probe = _verifiable_market(cfg, seed)
         start = _seed_genomes(cfg, seed, probe.categories, models, probe.demand)
         for arm in cfg.experiment.arms:
             if progress is not None:
                 progress(f"seed {seed}, arm {arm}")
-            market = VerifiableMarket(cfg.ollama.categories, cfg.market.tasks_per_generation, random.Random(seed))
-            results.append(
-                run_arm(
-                    cfg, arm, seed, start[ARMS[arm][0]], market, solver, models,
-                    log_attempts=True, progress=progress,
+            market = _verifiable_market(cfg, seed)
+            if ARMS[arm][0] == "menu":
+                results.append(run_router_arm(cfg, seed, market, solver, models, log_attempts=True, progress=progress))
+            else:
+                results.append(
+                    run_arm(
+                        cfg, arm, seed, start[ARMS[arm][0]], market, solver, models,
+                        log_attempts=True, progress=progress,
+                    )
                 )
-            )
             if progress is not None and pool.api is not None:
                 progress(f"  API so far: {pool.api.calls} calls, ${pool.api.spent_usd:.4f}")
     summary = summarize(results, cfg)

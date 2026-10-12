@@ -22,6 +22,7 @@ ARM_LABELS = {
     "static_random": "Static (random)",
     "static_tuned": "Static (hand-tuned)",
     "evolving_tuned": "Evolving (hand-tuned start)",
+    "router": "Learning router (no evolution)",
 }
 
 # Reference categorical palette (light, dark), validated for adjacent-pair CVD separation.
@@ -30,12 +31,15 @@ SERIES_COLORS = {
     "static_random": ("#eb6834", "#d95926"),
     "static_tuned": ("#1baf7a", "#199e70"),
     "evolving_tuned": ("#eda100", "#c98500"),
+    "router": ("#e87ba4", "#d55181"),
 }
 
 COMPARISONS = [
     ("evolving", "static_random"),
     ("evolving", "static_tuned"),
     ("evolving_tuned", "static_tuned"),
+    ("evolving", "router"),
+    ("router", "static_random"),
 ]
 
 
@@ -333,6 +337,16 @@ def verdicts(summary: dict[str, Any]) -> list[tuple[str, str]]:
             for c in same_start
         ]
         out.append(("Does evolution improve on the same strategies kept unchanged?", _judge(same_start) + "; ".join(parts) + "."))
+
+    if ("evolving", "router") in comps:
+        c = comps[("evolving", "router")]
+        out.append(
+            (
+                "Does evolution beat a simple learning router?",
+                _judge([c]) + f"wins in {c['wins']}/{c['seeds']} seeds "
+                f"(capital multiple {c['capital_multiple_diff']['mean']:+.2f}).",
+            )
+        )
 
     if ("evolving", "static_tuned") in comps:
         c = comps[("evolving", "static_tuned")]

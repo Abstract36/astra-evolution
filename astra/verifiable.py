@@ -11,6 +11,7 @@ import re
 from typing import Any, Callable
 
 from .agent import normalize
+from .hard_tasks import ANSWER_FORMAT, HARD_GENERATORS, check_hard
 from .config import VerifiableCategory
 from .market import Task
 
@@ -79,6 +80,7 @@ GENERATORS: dict[str, Callable[[random.Random, float], tuple[str, Any, str]]] = 
     "sorting": _sorting,
     "counting": _counting,
     "extraction": _extraction,
+    **HARD_GENERATORS,  # code, sql, invoice, business_days (see hard_tasks.py)
 }
 
 
@@ -93,6 +95,8 @@ def extract_answer(response: str) -> str:
 
 
 def check_answer(kind: str, expected: Any, response: str) -> bool:
+    if kind in ANSWER_FORMAT:
+        return check_hard(kind, expected, response)
     answer = extract_answer(response)
     if kind == "int":
         found = _INT.findall(answer)
@@ -107,7 +111,13 @@ def check_answer(kind: str, expected: Any, response: str) -> bool:
 class VerifiableMarket:
     """A stream of auto-checkable tasks with prices growing with difficulty."""
 
-    def __init__(self, categories: list[VerifiableCategory], tasks_per_generation: int, rng: random.Random):
+    def __init__(
+        self,
+        categories: list[VerifiableCategory],
+        tasks_per_generation: int,
+        rng: random.Random,
+        competitor_price_range: list[float] | None = None,
+    ):
         unknown = [c.name for c in categories if c.name not in GENERATORS]
         if unknown:
             raise ValueError(f"no generator for categories {unknown}; available: {list(GENERATORS)}")
@@ -115,6 +125,7 @@ class VerifiableMarket:
         self.demand = normalize({c.name: c.demand for c in categories})
         self.tasks_per_generation = tasks_per_generation
         self.rng = rng
+        self.competitor_price_range = competitor_price_range
 
     @property
     def categories(self) -> list[str]:
@@ -128,6 +139,10 @@ class VerifiableMarket:
             category = self.rng.choices(names, weights)[0]
             difficulty = self.rng.random()
             prompt, answer, kind = GENERATORS[category](self.rng, difficulty)
+            max_price = self.specs[category].base_price * (0.5 + difficulty)
+            competitor = None
+            if self.competitor_price_range is not None:
+                competitor = max_price * self.rng.uniform(*self.competitor_price_range)
             tasks.append(
                 Task(
                     id=f"g{generation}-t{i}",
@@ -135,7 +150,8 @@ class VerifiableMarket:
                     category=category,
                     difficulty=difficulty,
                     size=1.0,
-                    max_price=self.specs[category].base_price * (0.5 + difficulty),
+                    max_price=max_price,
+                    competitor_price=competitor,
                     payload={"prompt": prompt, "answer": answer, "kind": kind},
                 )
             )
