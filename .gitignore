@@ -8,6 +8,6 @@ venv/
 .pytest_cache/
 
 # Experiment output and owner workspaces (published results live in docs/results/)
-results/
-workspaces/
-my-node/
+/results/
+/workspaces/
+/my-node/

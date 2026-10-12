@@ -1,0 +1,127 @@
+experiment:
+  name: first_evolution
+  generations: 100
+  seeds: 10
+  base_seed: 1
+  population_size: 20
+  arms:
+  - evolving
+  - static_random
+  - static_tuned
+  - evolving_tuned
+  results_dir: results
+  save_ledger: false
+market:
+  tasks_per_generation: 120
+  agent_capacity: 5
+  size_range:
+  - 1.0
+  - 5.0
+  demand_drift: 0.1
+  internal_competition: false
+  external_competition: true
+  competitor_price_range:
+  - 0.6
+  - 1.0
+  competitor_reputation: 0.6
+  shocks: []
+  categories:
+  - name: software_dev
+    demand: 0.3
+    pay_rate: 2.6
+    difficulty: 0.6
+  - name: data_processing
+    demand: 0.25
+    pay_rate: 1.8
+    difficulty: 0.4
+  - name: automation
+    demand: 0.2
+    pay_rate: 2.2
+    difficulty: 0.5
+  - name: market_research
+    demand: 0.15
+    pay_rate: 2.0
+    difficulty: 0.45
+  - name: digital_products
+    demand: 0.1
+    pay_rate: 2.4
+    difficulty: 0.55
+models:
+- name: small
+  quality: 0.62
+  cost_per_unit: 0.35
+- name: medium
+  quality: 0.75
+  cost_per_unit: 0.9
+- name: large
+  quality: 0.88
+  cost_per_unit: 2.2
+economy:
+  initial_budget: 100.0
+  upkeep: 1.0
+  initial_reputation: 0.5
+  reputation_alpha: 0.2
+  bid_cost: 0.1
+  review_cost_overhead: 0.35
+  cost_noise: 0.1
+  success_sharpness: 10.0
+agent:
+  min_focus_to_bid: 0.05
+  prior_success: 0.6
+  prior_weight: 2.0
+  prior_win_rate: 0.5
+  exploration_trials: 2
+evolution:
+  defund_after: 4
+  cull_fraction: 0.1
+  fitness_window: 3
+  spawn_cost: 5.0
+  child_endowment: 25.0
+  parent_reserve: 20.0
+  payback_generations: 15.0
+  reinvest_returned: false
+  tournament_size: 3
+  crossover_rate: 0.3
+  mutation_rate: 0.3
+  mutation_scale: 0.15
+  reputation_inheritance: 0.5
+  memory_inheritance: 0.5
+baseline:
+  model: medium
+  effort: 0.75
+  price_level: 0.8
+  max_difficulty: 0.65
+  min_confidence: 0.45
+  review: false
+sandbox:
+  max_population: 20
+  max_spawns_per_generation: 6
+  owner_budget: 2000.0
+  allowed_hosts:
+  - 127.0.0.1
+  - localhost
+  - ::1
+  request_timeout: 300.0
+  max_tokens_per_call: 4096
+ollama:
+  host: http://127.0.0.1:11434
+  models: []
+  max_model_size_gb: 10.0
+  cost_per_second: 0.5
+  temperature: 0.2
+  think: false
+  base_tokens: 256
+  owner_tokens: 1500
+  categories:
+  - name: arithmetic
+    base_price: 4.0
+    demand: 0.25
+  - name: sorting
+    base_price: 4.0
+    demand: 0.25
+  - name: counting
+    base_price: 4.0
+    demand: 0.25
+  - name: extraction
+    base_price: 4.0
+    demand: 0.25

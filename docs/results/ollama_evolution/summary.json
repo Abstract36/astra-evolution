@@ -1,0 +1,371 @@
+{
+  "experiment": "ollama_evolution",
+  "created": "2026-10-12 12:00 UTC",
+  "seeds": [
+    1
+  ],
+  "generations": 10,
+  "population_size": 10,
+  "arms": {
+    "evolving": {
+      "capital_multiple": {
+        "mean": 1.260941473202026,
+        "std": 0.0,
+        "min": 1.260941473202026,
+        "max": 1.260941473202026
+      },
+      "operating_profit": {
+        "mean": 79.28244196060793,
+        "std": 0.0,
+        "min": 79.28244196060793,
+        "max": 79.28244196060793
+      },
+      "late_profit_per_agent": {
+        "mean": 3.493243688709347,
+        "std": 0.0,
+        "min": 3.493243688709347,
+        "max": 3.493243688709347
+      },
+      "success_rate": {
+        "mean": 0.6186440677966102,
+        "std": 0.0,
+        "min": 0.6186440677966102,
+        "max": 0.6186440677966102
+      },
+      "market_share": {
+        "mean": 0.59,
+        "std": 0.0,
+        "min": 0.59,
+        "max": 0.59
+      },
+      "revenue_to_cost": {
+        "mean": 1.6095895931824127,
+        "std": 0.0,
+        "min": 1.6095895931824127,
+        "max": 1.6095895931824127
+      },
+      "final_agents": {
+        "mean": 4.0,
+        "std": 0.0,
+        "min": 4,
+        "max": 4
+      }
+    },
+    "static_random": {
+      "capital_multiple": {
+        "mean": 1.021642867119313,
+        "std": 0.0,
+        "min": 1.021642867119313,
+        "max": 1.021642867119313
+      },
+      "operating_profit": {
+        "mean": 6.49286013579386,
+        "std": 0.0,
+        "min": 6.49286013579386,
+        "max": 6.49286013579386
+      },
+      "late_profit_per_agent": {
+        "mean": -0.12437941960169951,
+        "std": 0.0,
+        "min": -0.12437941960169951,
+        "max": -0.12437941960169951
+      },
+      "success_rate": {
+        "mean": 0.5643564356435643,
+        "std": 0.0,
+        "min": 0.5643564356435643,
+        "max": 0.5643564356435643
+      },
+      "market_share": {
+        "mean": 0.505,
+        "std": 0.0,
+        "min": 0.505,
+        "max": 0.505
+      },
+      "revenue_to_cost": {
+        "mean": 1.0454049291528476,
+        "std": 0.0,
+        "min": 1.0454049291528476,
+        "max": 1.0454049291528476
+      },
+      "final_agents": {
+        "mean": 10.0,
+        "std": 0.0,
+        "min": 10,
+        "max": 10
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "arm": "evolving",
+      "baseline": "static_random",
+      "seeds": 1,
+      "wins": 1,
+      "capital_multiple_diff": {
+        "mean": 0.23929860608271314,
+        "std": 0.0,
+        "min": 0.23929860608271314,
+        "max": 0.23929860608271314
+      },
+      "late_profit_per_agent_diff": {
+        "mean": 3.6176231083110464,
+        "std": 0.0,
+        "min": 3.6176231083110464,
+        "max": 3.6176231083110464
+      }
+    }
+  ],
+  "per_run": [
+    {
+      "arm": "evolving",
+      "seed": 1,
+      "capital_multiple": 1.260941473202026,
+      "operating_profit": 79.28244196060793,
+      "late_profit_per_agent": 3.493243688709347,
+      "success_rate": 0.6186440677966102,
+      "market_share": 0.59,
+      "revenue_to_cost": 1.6095895931824127,
+      "final_agents": 4,
+      "births": 1,
+      "deaths": 7
+    },
+    {
+      "arm": "static_random",
+      "seed": 1,
+      "capital_multiple": 1.021642867119313,
+      "operating_profit": 6.49286013579386,
+      "late_profit_per_agent": -0.12437941960169951,
+      "success_rate": 0.5643564356435643,
+      "market_share": 0.505,
+      "revenue_to_cost": 1.0454049291528476,
+      "final_agents": 10,
+      "births": 0,
+      "deaths": 0
+    }
+  ],
+  "by_generation": {
+    "evolving": [
+      {
+        "generation": 0,
+        "capital_multiple": 0.955745798826314,
+        "profit_per_agent": -1.3276260352105813,
+        "success_rate": 0.46153846153846156,
+        "population": 10.0
+      },
+      {
+        "generation": 1,
+        "capital_multiple": 0.9592716334707997,
+        "profit_per_agent": 0.10577503933457337,
+        "success_rate": 0.5,
+        "population": 10.0
+      },
+      {
+        "generation": 2,
+        "capital_multiple": 0.9605808856404587,
+        "profit_per_agent": 0.1392775650897775,
+        "success_rate": 0.5,
+        "population": 10.0
+      },
+      {
+        "generation": 3,
+        "capital_multiple": 0.9772612297752827,
+        "profit_per_agent": 1.000820648089433,
+        "success_rate": 0.6666666666666666,
+        "population": 5.0
+      },
+      {
+        "generation": 4,
+        "capital_multiple": 1.0416947000233492,
+        "profit_per_agent": 3.866008214883988,
+        "success_rate": 0.8461538461538461,
+        "population": 5.0
+      },
+      {
+        "generation": 5,
+        "capital_multiple": 1.1012179216714462,
+        "profit_per_agent": 3.5713932988858104,
+        "success_rate": 0.7142857142857143,
+        "population": 5.0
+      },
+      {
+        "generation": 6,
+        "capital_multiple": 1.1317248264404451,
+        "profit_per_agent": 1.8304142861399597,
+        "success_rate": 0.5833333333333334,
+        "population": 5.0
+      },
+      {
+        "generation": 7,
+        "capital_multiple": 1.1677883081697769,
+        "profit_per_agent": 2.1638089037599,
+        "success_rate": 0.6363636363636364,
+        "population": 5.0
+      },
+      {
+        "generation": 8,
+        "capital_multiple": 1.1978712789329287,
+        "profit_per_agent": 2.2562228072363792,
+        "success_rate": 0.5454545454545454,
+        "population": 4.0
+      },
+      {
+        "generation": 9,
+        "capital_multiple": 1.260941473202026,
+        "profit_per_agent": 4.730264570182315,
+        "success_rate": 0.6923076923076923,
+        "population": 4.0
+      }
+    ],
+    "static_random": [
+      {
+        "generation": 0,
+        "capital_multiple": 0.9692561234051734,
+        "profit_per_agent": -0.9223162978447974,
+        "success_rate": 0.5384615384615384,
+        "population": 10.0
+      },
+      {
+        "generation": 1,
+        "capital_multiple": 0.963562019972638,
+        "profit_per_agent": -0.17082310297606224,
+        "success_rate": 0.46153846153846156,
+        "population": 10.0
+      },
+      {
+        "generation": 2,
+        "capital_multiple": 0.9692737189905479,
+        "profit_per_agent": 0.17135097053730058,
+        "success_rate": 0.6,
+        "population": 10.0
+      },
+      {
+        "generation": 3,
+        "capital_multiple": 0.9637615133527694,
+        "profit_per_agent": -0.16536616913336416,
+        "success_rate": 0.5,
+        "population": 10.0
+      },
+      {
+        "generation": 4,
+        "capital_multiple": 0.9581296719271972,
+        "profit_per_agent": -0.16895524276716026,
+        "success_rate": 0.5,
+        "population": 10.0
+      },
+      {
+        "generation": 5,
+        "capital_multiple": 0.9821416044042814,
+        "profit_per_agent": 0.7203579743125303,
+        "success_rate": 0.6666666666666666,
+        "population": 10.0
+      },
+      {
+        "generation": 6,
+        "capital_multiple": 0.9964997459197397,
+        "profit_per_agent": 0.43074424546374124,
+        "success_rate": 0.625,
+        "population": 10.0
+      },
+      {
+        "generation": 7,
+        "capital_multiple": 1.0299348284260927,
+        "profit_per_agent": 1.003052475190597,
+        "success_rate": 0.75,
+        "population": 10.0
+      },
+      {
+        "generation": 8,
+        "capital_multiple": 1.0237553112674462,
+        "profit_per_agent": -0.18538551475939538,
+        "success_rate": 0.625,
+        "population": 10.0
+      },
+      {
+        "generation": 9,
+        "capital_multiple": 1.021642867119313,
+        "profit_per_agent": -0.06337332444400363,
+        "success_rate": 0.4444444444444444,
+        "population": 10.0
+      }
+    ]
+  },
+  "traits": {
+    "evolving": {
+      "first": {
+        "gene:effort": 1.3146760278158178,
+        "gene:price_level": 0.7099286256365176,
+        "gene:max_difficulty": 0.5768175922674315,
+        "gene:min_confidence": 0.49447907876543723,
+        "gene:review": 0.4,
+        "specialization": 0.580083441365761,
+        "model:qwen3.5:4b": 0.3,
+        "model:hf.co/cognitivecomputations/Dolphin3.0-Llama3.1-8B-GGUF:Q4_0": 0.7,
+        "focus:arithmetic": 0.11623580708130712,
+        "focus:sorting": 0.32407594570956466,
+        "focus:counting": 0.3015478678109439,
+        "focus:extraction": 0.25814037939818435,
+        "demand:arithmetic": 0.25,
+        "demand:sorting": 0.25,
+        "demand:counting": 0.25,
+        "demand:extraction": 0.25
+      },
+      "last": {
+        "gene:effort": 0.9788792557726526,
+        "gene:price_level": 0.913908115038784,
+        "gene:max_difficulty": 0.6223356069257984,
+        "gene:min_confidence": 0.30798724367757657,
+        "gene:review": 0.0,
+        "specialization": 0.64354109415379,
+        "model:qwen3.5:4b": 0.5,
+        "model:hf.co/cognitivecomputations/Dolphin3.0-Llama3.1-8B-GGUF:Q4_0": 0.5,
+        "focus:arithmetic": 0.12073751372750553,
+        "focus:sorting": 0.123766935705587,
+        "focus:counting": 0.5760131646871648,
+        "focus:extraction": 0.17948238587974272,
+        "demand:arithmetic": 0.25,
+        "demand:sorting": 0.25,
+        "demand:counting": 0.25,
+        "demand:extraction": 0.25
+      }
+    },
+    "static_random": {
+      "first": {
+        "gene:effort": 1.3146760278158178,
+        "gene:price_level": 0.7099286256365176,
+        "gene:max_difficulty": 0.5768175922674315,
+        "gene:min_confidence": 0.49447907876543723,
+        "gene:review": 0.4,
+        "specialization": 0.580083441365761,
+        "model:qwen3.5:4b": 0.3,
+        "model:hf.co/cognitivecomputations/Dolphin3.0-Llama3.1-8B-GGUF:Q4_0": 0.7,
+        "focus:arithmetic": 0.11623580708130712,
+        "focus:sorting": 0.32407594570956466,
+        "focus:counting": 0.3015478678109439,
+        "focus:extraction": 0.25814037939818435,
+        "demand:arithmetic": 0.25,
+        "demand:sorting": 0.25,
+        "demand:counting": 0.25,
+        "demand:extraction": 0.25
+      },
+      "last": {
+        "gene:effort": 1.3146760278158178,
+        "gene:price_level": 0.7099286256365176,
+        "gene:max_difficulty": 0.5768175922674315,
+        "gene:min_confidence": 0.49447907876543723,
+        "gene:review": 0.4,
+        "specialization": 0.580083441365761,
+        "model:qwen3.5:4b": 0.3,
+        "model:hf.co/cognitivecomputations/Dolphin3.0-Llama3.1-8B-GGUF:Q4_0": 0.7,
+        "focus:arithmetic": 0.11623580708130712,
+        "focus:sorting": 0.32407594570956466,
+        "focus:counting": 0.3015478678109439,
+        "focus:extraction": 0.25814037939818435,
+        "demand:arithmetic": 0.25,
+        "demand:sorting": 0.25,
+        "demand:counting": 0.25,
+        "demand:extraction": 0.25
+      }
+    }
+  }
+}
