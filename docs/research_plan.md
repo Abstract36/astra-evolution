@@ -45,7 +45,7 @@ Out of scope, on purpose (see [safety.md](safety.md)):
 | Nine ablations | Letting agents of one population underbid each other costs about a fifth of the capital. The advantage holds in a stationary market. |
 | Local models (qwen3.5:4b, Dolphin 8B), 1 seed | Evolving x1.26 vs. unchanged x1.02. Evolution dropped self-review and split work between the models. |
 | Local models vs. DeepSeek API, 1 seed | Tie at x1.14. `deepseek-flash` solved 188 of 188 tasks at about $0.0002 each. Agents learning from their own experience captured most of the gain without selection. |
-| Same, population refills after defunding, 5 seeds | Running. After 2 seeds: one win each. Early pattern: evolution rescues a bad starting population but costs money when the start is already good. |
+| Same, population refills after defunding, 5 seeds ([details](experiment.md#letting-the-population-refill-5-seeds)) | Evolution wins in 4 of 5 seeds (x1.17 vs. x1.03; revenue / full cost 1.70 vs. 1.11). It rescues a bad starting population and costs a little when the start is already good. Not yet statistically significant. |
 
 ## Remaining experiments
 
@@ -53,7 +53,7 @@ Out of scope, on purpose (see [safety.md](safety.md)):
 
 | # | Experiment | Question | Counts as "yes" |
 |---|---|---|---|
-| 4 | Refilling population, 5 seeds (running) | Does refilling after defunding let evolution beat the unchanged population on real models? | Wins in at least 4 of 5 seeds |
+| 4 | Refilling population, 5 seeds (**done: 4 of 5, criterion met**) | Does refilling after defunding let evolution beat the unchanged population on real models? | Wins in at least 4 of 5 seeds |
 | 5 | A simple learning router (multi-armed bandit over models per task category) in place of evolution | Is evolution needed at all, or does a much simpler learner do as well? | Evolution beats the router in at least 9 of 10 seeds |
 | 6 | Harder auto-checked tasks: code with unit tests, extraction from messy text, SQL | When no single model wins everything, does selection find better strategies? | Evolution beats both controls in at least 9 of 10 seeds |
 | 7 | The best variant from 4-6, 10 seeds | Is the result statistically sound? | At least 9 of 10 paired wins (sign test p of about 0.01) |

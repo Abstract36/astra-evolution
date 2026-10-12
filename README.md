@@ -46,9 +46,10 @@ funding. Selection runs on measured results, not on anyone's opinion.
   an offline grid search finds with a perfect simulator (0/10 seeds). That is
   the next research question.
 - **With real models** (local Ollama models vs. DeepSeek's API, real token
-  bills, one seed): `deepseek-flash` solved 188 of 188 tasks at about $0.0002
-  each, and evolution matched but did not beat an unchanged population that
-  simply learned from experience. The whole run cost $0.03 of real money.
+  bills): `deepseek-flash` solved 188 of 188 tasks at about $0.0002 each. Once
+  the evolving population was allowed to refill after defunding, evolution won
+  in 4 of 5 seeds (capital x1.17 vs. x1.03), mostly by rescuing populations
+  that started with bad strategies. All runs together cost $0.14 of real money.
   [Details](docs/experiment.md#local-models-vs-a-paid-api-deepseek).
 - **Design lessons** that matter for any network of economic agents, for
   example that letting agents of one network underbid each other costs everyone

@@ -1,0 +1,147 @@
+experiment:
+  name: local_vs_deepseek
+  generations: 12
+  seeds: 5
+  base_seed: 1
+  population_size: 12
+  arms:
+  - evolving
+  - static_random
+  results_dir: results
+  save_ledger: false
+market:
+  tasks_per_generation: 30
+  agent_capacity: 4
+  size_range:
+  - 1.0
+  - 5.0
+  demand_drift: 0.1
+  internal_competition: false
+  external_competition: false
+  competitor_price_range:
+  - 0.6
+  - 1.0
+  competitor_reputation: 0.6
+  shocks: []
+  categories:
+  - name: software_dev
+    demand: 0.3
+    pay_rate: 2.6
+    difficulty: 0.6
+  - name: data_processing
+    demand: 0.25
+    pay_rate: 1.8
+    difficulty: 0.4
+  - name: automation
+    demand: 0.2
+    pay_rate: 2.2
+    difficulty: 0.5
+  - name: market_research
+    demand: 0.15
+    pay_rate: 2.0
+    difficulty: 0.45
+  - name: digital_products
+    demand: 0.1
+    pay_rate: 2.4
+    difficulty: 0.55
+models:
+- name: qwen3.5:4b
+  quality: 0.7
+  cost_per_unit: 1.0
+- name: hf.co/cognitivecomputations/Dolphin3.0-Llama3.1-8B-GGUF:Q4_0
+  quality: 0.7
+  cost_per_unit: 1.0
+- name: deepseek-flash
+  quality: 0.7
+  cost_per_unit: 1.0
+- name: deepseek-v4-pro
+  quality: 0.7
+  cost_per_unit: 1.0
+economy:
+  initial_budget: 20.0
+  upkeep: 0.2
+  initial_reputation: 0.5
+  reputation_alpha: 0.2
+  bid_cost: 0.0
+  review_cost_overhead: 0.35
+  cost_noise: 0.1
+  success_sharpness: 10.0
+agent:
+  min_focus_to_bid: 0.05
+  prior_success: 0.6
+  prior_weight: 2.0
+  prior_win_rate: 0.5
+  exploration_trials: 2
+evolution:
+  defund_after: 3
+  cull_fraction: 0.2
+  fitness_window: 2
+  spawn_cost: 0.5
+  child_endowment: 6.0
+  parent_reserve: 3.0
+  payback_generations: 25.0
+  reinvest_returned: true
+  target_unserved: true
+  tournament_size: 3
+  crossover_rate: 0.3
+  mutation_rate: 0.3
+  mutation_scale: 0.15
+  reputation_inheritance: 0.5
+  memory_inheritance: 0.5
+baseline:
+  model: qwen3.5:4b
+  effort: 0.75
+  price_level: 0.8
+  max_difficulty: 0.65
+  min_confidence: 0.45
+  review: false
+sandbox:
+  max_population: 12
+  max_spawns_per_generation: 3
+  owner_budget: 300.0
+  allowed_hosts:
+  - 127.0.0.1
+  - localhost
+  - ::1
+  - api.deepseek.com
+  request_timeout: 300.0
+  max_tokens_per_call: 4096
+  max_api_spend_usd: 1.0
+ollama:
+  enabled: true
+  host: http://127.0.0.1:11434
+  models: []
+  max_model_size_gb: 10.0
+  cost_per_second: 0.03
+  temperature: 0.2
+  think: false
+  base_tokens: 256
+  owner_tokens: 1500
+  categories:
+  - name: arithmetic
+    base_price: 0.8
+    demand: 0.25
+  - name: sorting
+    base_price: 0.8
+    demand: 0.25
+  - name: counting
+    base_price: 0.8
+    demand: 0.25
+  - name: extraction
+    base_price: 0.8
+    demand: 0.25
+api:
+  enabled: true
+  base_url: https://api.deepseek.com
+  api_key_env: DEEPSEEK_API_KEY
+  credits_per_usd: 1000.0
+  thinking_tokens: 1024
+  models:
+  - name: deepseek-flash
+    input_usd_per_mtok: 0.3
+    cached_input_usd_per_mtok: 0.006
+    output_usd_per_mtok: 1.2
+  - name: deepseek-v4-pro
+    input_usd_per_mtok: 1.32
+    cached_input_usd_per_mtok: 0.044
+    output_usd_per_mtok: 3.96

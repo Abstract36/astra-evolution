@@ -224,9 +224,41 @@ What happened, honestly:
 - In this seed no agent started with `qwen3.5:4b`, and the one `deepseek-v4-pro`
   agent never won a task, so the run says nothing about those two.
 
-The next step for real models is more seeds and a population that can refill
-after defunding (for example `evolution.reinvest_returned: true`), so that
-selection does not cost throughput.
+### Letting the population refill (5 seeds)
+
+In that run the evolving population shrank to half its size and never grew
+back: the best agents were profitable, but the unserved tasks were harder than
+any of them would take, so no child was ever created. The follow-up lets the
+population refill: the treasury funds children
+(`evolution.reinvest_returned=true`), children are built to take the unserved
+work of their niche (`evolution.target_unserved=true`), and the payback
+threshold is lower (`evolution.payback_generations=25`). Five seeds, run one
+by one and combined with `astra merge`
+([report](results/local_vs_deepseek_refill/report.md)).
+
+| Seed | Evolving | Static (random) |
+|---:|---:|---:|
+| 1 | x1.13 | **x1.17** |
+| 2 | **x1.05** | x0.92 |
+| 3 | **x1.11** | x0.98 |
+| 4 | **x1.40** | x1.00 |
+| 5 | **x1.14** | x1.08 |
+| mean | **x1.17 ± 0.14** | x1.03 ± 0.10 |
+
+- **Evolution wins in 4 of 5 seeds**; revenue covers its full cost 1.70 times
+  against 1.11. That meets the criterion set for this experiment in the
+  [research plan](research_plan.md), but 4 of 5 is not yet statistically
+  significant (one-sided sign test p of about 0.19); that needs 10 seeds.
+- **Evolution matters most when the start is bad.** In seeds 2-4 the
+  unchanged population did not cover its costs (revenue / cost 0.54-0.99);
+  the evolving one did (1.24-2.74). In seed 1, where the random start was
+  already good, evolution cost a little.
+- **The right growth rule depends on the models.** The same refill rules
+  lower capital in the simulated market (see the ablations), where hard tasks
+  are unprofitable for every model. With a model that solves almost
+  everything, growing into harder unserved work pays.
+- Real money spent: 761 API calls, $0.11 at peak prices (the balance moved
+  from $19.34 to $19.29).
 
 ## Calibration of reasoning models
 
