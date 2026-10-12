@@ -1,7 +1,8 @@
 # Roadmap
 
 The project grows in three directions. Each step starts only when the previous
-one produced measurable evidence.
+one produced measurable evidence. The experiments behind each step, with their
+success criteria, are in the [research plan](research_plan.md).
 
 ## 1. Evolution Engine (this repository, v0.1)
 

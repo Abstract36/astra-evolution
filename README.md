@@ -149,6 +149,11 @@ Details: [docs/architecture.md](docs/architecture.md).
 
 See [docs/safety.md](docs/safety.md).
 
+## Research plan
+
+What is known, what remains and what result would count as an answer for each
+remaining experiment: [docs/research_plan.md](docs/research_plan.md).
+
 ## Roadmap
 
 1. **Evolution Engine**: selection of strategies by measurable results (this release).
